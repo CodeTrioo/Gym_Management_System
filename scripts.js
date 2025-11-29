@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   enableSmoothScroll();
 });
 
-// Highlight current page in nav based on filename
+// Highlighting current page in nav based on filename
 function highlightActiveNavLink() {
   const path = window.location.pathname;
   const current = path.substring(path.lastIndexOf("/") + 1) || "index.html";
