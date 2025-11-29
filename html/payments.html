@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitSphere | Secure Payments</title>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="logo">FitSphere</div>
+      <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="membership.html">Memberships</a>
+        <a href="classes.html">Classes</a>
+        <a href="dashboard-user.html">Dashboard</a>
+        <a href="contact.html">Support</a>
+        <a href="login.html" class="btn primary">Login / Sign Up</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Secure Checkout</h1>
+        <p>All transactions are encrypted and processed via HTTPS + Esewa / credit gateways.</p>
+      </section>
+
+      <section class="section two-column">
+        <form class="card">
+          <h2>Billing Details</h2>
+          <label>Membership
+            <select>
+              <option>Basic - $29/mo</option>
+              <option>Premium - $59/mo</option>
+              <option>VIP - $99/mo</option>
+            </select>
+          </label>
+          <label>Payment Method
+            <select>
+              <option>Esewa</option>
+              <option>Credit Card</option>
+            </select>
+          </label>
+          <label>Card Number<input type="text" placeholder="xxxx xxxx xxxx xxxx" /></label>
+          <label>Name on Card<input type="text" placeholder="Full Name" /></label>
+          <label>Expiry<input type="month" /></label>
+          <label>CVV<input type="password" placeholder="***" /></label>
+          <button class="btn primary" type="submit">Pay Securely</button>
+        </form>
+        <div class="card">
+          <h2>Security Highlights</h2>
+          <ul>
+            <li>Passwords stored with bcrypt hashing</li>
+            <li>PCI-compliant payment partners</li>
+            <li>Daily database backups & monitoring</li>
+            <li>99.9% uptime SLA</li>
+          </ul>
+          <p>Need an invoice? Download from your <a href="dashboard-user.html">user dashboard</a>.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2025 FitSphere. All rights reserved.</p>
+      <small>Questions? <a href="contact.html">Contact billing support</a>.</small>
+    </footer>
+
+    <script src="../scripts.js"></script>
+  </body>
+</html>
