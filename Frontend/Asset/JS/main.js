@@ -24,13 +24,8 @@ async function registerUser(event) {
     const dateOfBirth = document.getElementById("dateOfBirth")?.value;
     const gender = document.getElementById("gender")?.value;
     const address = document.getElementById("address")?.value;
-    const username = document.getElementById("username")?.value;
     const password = document.getElementById("password")?.value;
     const confirmPassword = document.getElementById("confirmPassword")?.value;
-    const membershipType = document.getElementById("membershipType")?.value;
-    const joinDate = document.getElementById("joinDate")?.value;
-    const fitnessGoals = document.getElementById("fitnessGoals")?.value;
-    const medicalConditions = document.getElementById("medicalConditions")?.value;
     const terms = document.getElementById("terms")?.checked;
 
     // Validate password match
@@ -51,7 +46,6 @@ async function registerUser(event) {
 
     // Prepare registration data
     const registrationData = {
-        username,
         password,
         firstName,
         lastName,
@@ -59,11 +53,7 @@ async function registerUser(event) {
         phone,
         dateOfBirth,
         gender,
-        address,
-        membershipType,
-        joinDate,
-        fitnessGoals,
-        medicalConditions
+        address
     };
 
     try {
