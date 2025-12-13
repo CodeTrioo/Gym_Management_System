@@ -1,0 +1,30 @@
+/* Login Page Specific Styles */
+.login-form {
+    /* Add any login-specific form styles here if needed */
+}
+
+/* Login info card enhancement */
+.bg-gradient-primary {
+    background: var(--primary-gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.bg-gradient-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 30% 50%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 70% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.bg-gradient-primary > * {
+    position: relative;
+    z-index: 1;
+}
+
