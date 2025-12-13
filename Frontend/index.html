@@ -1,12 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Home</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitZone - Gym Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="Asset/Css/style.css">
 </head>
 <body>
-    <h1>Welcome</h1>
-    <a href="login.html">Login</a> |
-    <a href="register.html">Register</a>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3 text-primary" href="index.html">
+                <i class="bi bi-activity"></i> FitZone
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-semibold" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary text-white px-4 ms-2 rounded-pill" href="register.html">Register</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section bg-gradient-primary text-white py-5">
+        <div class="container py-5">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-8">
+                    <h1 class="display-3 fw-bold mb-4">Transform Your Body, Transform Your Life</h1>
+                    <p class="lead fs-4 mb-5 opacity-90">Join thousands of members achieving their fitness goals with our state-of-the-art gym management system</p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        <a href="register.html" class="btn btn-light btn-lg px-5 rounded-pill shadow-lg">
+                            <i class="bi bi-rocket-takeoff me-2"></i>Get Started
+                        </a>
+                        <a href="login.html" class="btn btn-outline-light btn-lg px-5 rounded-pill">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Member Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5 bg-white">
+        <div class="container py-5">
+            <h2 class="text-center display-4 fw-bold mb-5">Why Choose FitZone?</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-graph-up-arrow fs-1 text-primary"></i>
+                            </div>
+                            <h3 class="card-title fw-bold">Track Progress</h3>
+                            <p class="card-text text-muted">Monitor your workouts, track your progress, and achieve your fitness goals with detailed analytics.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-calendar-check fs-1 text-primary"></i>
+                            </div>
+                            <h3 class="card-title fw-bold">Schedule Classes</h3>
+                            <p class="card-text text-muted">Book your favorite classes, manage your schedule, and never miss a workout session.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-credit-card fs-1 text-primary"></i>
+                            </div>
+                            <h3 class="card-title fw-bold">Membership Management</h3>
+                            <p class="card-text text-muted">Easy membership plans, payment tracking, and renewal reminders all in one place.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-people fs-1 text-primary"></i>
+                            </div>
+                            <h3 class="card-title fw-bold">Trainer Support</h3>
+                            <p class="card-text text-muted">Connect with certified trainers, get personalized workout plans, and professional guidance.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-phone fs-1 text-primary"></i>
+                            </div>
+                            <h3 class="card-title fw-bold">Mobile Friendly</h3>
+                            <p class="card-text text-muted">Access your gym profile, book classes, and track progress from any device, anywhere.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="bi bi-trophy fs-1 text-primary"></i>
+                            </div>
+                            <h3 class="card-title fw-bold">Achievement System</h3>
+                            <p class="card-text text-muted">Earn badges, unlock achievements, and stay motivated with our gamified fitness system.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="bg-dark text-white py-5">
+        <div class="container py-5 text-center">
+            <h2 class="display-4 fw-bold mb-3">Ready to Start Your Fitness Journey?</h2>
+            <p class="lead mb-4">Join FitZone today and take the first step towards a healthier, stronger you.</p>
+            <a href="register.html" class="btn btn-primary btn-lg px-5 rounded-pill shadow-lg">
+                <i class="bi bi-person-plus me-2"></i>Register Now
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 FitZone Gym Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="Asset/JS/main.js"></script>
 </body>
 </html>
