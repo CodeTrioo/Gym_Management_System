@@ -9,8 +9,12 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
+from dotenv import load_dotenv
 from pathlib import Path
+
+#load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&!(fxx3bwqz#on5y4tnv23lstv^wvkju-a2_3gbn$^a3e+1$wk'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG") == "True"
 
 ALLOWED_HOSTS = []
 
@@ -37,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',  # <- MUST be present
+    'accounts',
 ]
 
 
@@ -78,11 +82,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'gym',
-        'USER': 'root',
-        'PASSWORD': 'lupra',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.getenv("DB_Name"),
+        'USER': os.getenv("DB_User"),
+        'PASSWORD': os.getenv("DB_Password"),
+        'HOST': os.getenv("DB_Host"),
+        'PORT': os.getenv("DB_Port"),
         'OPTIONS': {
             'charset': 'utf8mb4',
         }

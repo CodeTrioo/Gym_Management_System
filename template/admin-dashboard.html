@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Gym Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 24px;
+        }
+        .sidebar {
+            background-color: #343a40;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .sidebar a {
+            color: #ffffff;
+            text-decoration: none;
+            display: block;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #495057;
+        }
+        .sidebar a.active {
+            background-color: #007bff;
+        }
+        .main-content {
+            padding: 30px;
+        }
+        .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .stat-card h3 {
+            color: #007bff;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .stat-card p {
+            color: #6c757d;
+            margin: 0;
+        }
+        .user-info {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .user-info h5 {
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark mb-0">
+        <div class="container-fluid">
+            <span class="navbar-brand">🏋️ Gym Management System - Admin</span>
+            <div class="d-flex align-items-center">
+                <span class="text-light me-3">{{ user_name }}</span>
+                <a href="/logout/" class="btn btn-danger btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 sidebar">
+                <h5 class="text-white mb-4">Admin Menu</h5>
+                <a href="/admin-dashboard/" class="active">📊 Dashboard</a>
+                <a href="#users">👥 Users</a>
+                <a href="#memberships">💳 Memberships</a>
+                <a href="#classes">🏃 Classes</a>
+                <a href="#trainers">🧑‍🏫 Trainers</a>
+                <a href="#payments">💰 Payments</a>
+                <a href="#reports">📈 Reports</a>
+                <a href="/logout/" class="mt-5 logout-btn">🚪 Logout</a>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-10 main-content">
+                <!-- Welcome Section -->
+                <div class="user-info">
+                    <h5>✅ Welcome, {{ user_name }}!</h5>
+                    <p><strong>Email:</strong> {{ user_email }}</p>
+                    <p><strong>Role:</strong> Administrator</p>
+                    <p><small>You have full access to all admin features.</small></p>
+                </div>
+
+                <!-- Page Title -->
+                <h1 class="mb-4">Admin Dashboard</h1>
+
+                <!-- Stats Row -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <h3>256</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <h3>48</h3>
+                            <p>Active Members</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <h3>12</h3>
+                            <p>Trainers</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <h3>₹45,670</h3>
+                            <p>Monthly Revenue</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management Sections -->
+                <div class="row mt-4">
+                    <!-- Users Section -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">👥 User Management</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Manage all registered users and members.</p>
+                                <ul class="list-unstyled">
+                                    <li>✓ View all users</li>
+                                    <li>✓ Edit user details</li>
+                                    <li>✓ Manage permissions</li>
+                                    <li>✓ Deactivate accounts</li>
+                                </ul>
+                                <button class="btn btn-primary btn-sm">Manage Users</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Memberships Section -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">💳 Memberships</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Manage membership plans and subscriptions.</p>
+                                <ul class="list-unstyled">
+                                    <li>✓ Create membership plans</li>
+                                    <li>✓ View active subscriptions</li>
+                                    <li>✓ Manage renewals</li>
+                                    <li>✓ Cancel memberships</li>
+                                </ul>
+                                <button class="btn btn-success btn-sm">Manage Memberships</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <!-- Classes Section -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-warning text-white">
+                                <h5 class="mb-0">🏃 Classes</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Manage gym classes and schedules.</p>
+                                <ul class="list-unstyled">
+                                    <li>✓ Create classes</li>
+                                    <li>✓ Assign trainers</li>
+                                    <li>✓ Set schedules</li>
+                                    <li>✓ Manage enrollments</li>
+                                </ul>
+                                <button class="btn btn-warning btn-sm">Manage Classes</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payments Section -->
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">💰 Payments</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Track and manage all payments.</p>
+                                <ul class="list-unstyled">
+                                    <li>✓ View payment history</li>
+                                    <li>✓ Process refunds</li>
+                                    <li>✓ Generate invoices</li>
+                                    <li>✓ Revenue reports</li>
+                                </ul>
+                                <button class="btn btn-info btn-sm">View Payments</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <hr class="my-4">
+                <footer class="text-center text-muted">
+                    <p>&copy; 2025 Gym Management System. All rights reserved.</p>
+                </footer>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
