@@ -20,9 +20,18 @@ from accounts import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Home page
+    path('', views.index, name='index'),
 
-    # API endpoints
-    path('api/register/', views.register_user),
-    path('api/login/', views.login_user),
-    path('api/logout/', views.logout_user),
+    # Authentication pages
+    path('register/', views.register_view, name='register'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_user, name='logout'),
+    
+    path('register-user/', views.register_user, name='register_user'),
+    path('login-user/', views.login_user, name='login_user'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+    
+  
 ]
