@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Verified — GymPro</title>
+<link rel="stylesheet" href="{% static 'Css/main.css' %}">
+<style>
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);}
+  .auth-card{width:100%;max-width:420px;text-align:center;padding:40px 28px;}
+  .icon-check{font-size:3rem;margin-bottom:16px;}
+  p{color:var(--text-secondary);line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="auth-card card">
+  <div class="icon-check">✅</div>
+  <h1 style="margin-bottom:16px;">Verified successfully!</h1>
+  <p>Your GymPro account has been successfully created and verified.</p>
+  <div style="margin-top:24px;">
+    <a href="{% url 'login' %}" class="btn btn-primary">Log in to your account</a>
+  </div>
+</div>
+</body>
+</html>

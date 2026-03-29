@@ -1,0 +1,352 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Choose Your Trainer — GymPro</title>
+  <link rel="stylesheet" href="{% static 'Css/main.css' %}">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px;
+      font-family: var(--font-body, 'Inter', sans-serif);
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 40px;
+      max-width: 640px;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .page-header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .trainers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .trainer-card {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .trainer-card:hover {
+      border-color: var(--teal);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(13, 148, 136, 0.2);
+    }
+
+    .trainer-card.selected {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.25);
+    }
+
+    .trainer-photo {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--teal);
+      margin: 0 auto 16px;
+      display: block;
+    }
+
+    .trainer-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .trainer-speciality {
+      font-size: 0.82rem;
+      color: var(--teal-light);
+      text-align: center;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+
+    .trainer-bio {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      line-height: 1.55;
+      text-align: center;
+      margin-bottom: 20px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .select-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid var(--teal);
+      background: transparent;
+      color: var(--teal-light);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      font-family: inherit;
+    }
+
+    .select-btn:hover,
+    .select-btn.chosen {
+      background: var(--teal);
+      color: #fff;
+    }
+
+    .check-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      display: none;
+    }
+
+    .trainer-card.selected .check-badge {
+      display: flex;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .filter-btn {
+      padding: 7px 18px;
+      border-radius: 30px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: var(--teal-glow);
+      border-color: var(--border-teal);
+      color: var(--teal-light);
+    }
+
+    .confirm-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-dark);
+      border-top: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      align-items: center;
+      z-index: 100;
+      display: none;
+    }
+
+    .confirm-bar.visible {
+      display: flex;
+    }
+
+    .skip-link {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-decoration: none;
+      margin-top: 16px;
+      display: block;
+      text-align: center;
+    }
+
+    .skip-link:hover {
+      color: var(--text-secondary);
+    }
+
+    .no-trainers {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .no-trainers span {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-header">
+    <div style="font-size: 2.5rem; margin-bottom: 16px;">🎉</div>
+    <h1>Choose Your Trainer</h1>
+    <p>Pick the fitness expert that matches your goals. Your trainer will design your personalised diet and workout
+      plan.</p>
+  </div>
+
+  <!-- Specialty Filter -->
+  {% if specialities %}
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterTrainers('all', this)">All</button>
+    {% for spec in specialities %}
+    <button class="filter-btn" onclick="filterTrainers('{{ spec }}', this)">{{ spec }}</button>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="trainers-grid" id="trainers-grid">
+    {% for instructor in instructors %}
+    <div class="trainer-card" id="card-{{ instructor.id }}" data-spec="{{ instructor.speciality }}"
+      onclick="selectTrainer({{ instructor.id }}, this)">
+      <div class="check-badge">✓</div>
+      <img src="{{ instructor.get_profile_image }}" alt="{{ instructor.user.get_full_name }}" class="trainer-photo">
+      <div class="trainer-name">{{ instructor.user.get_full_name|default:instructor.user.email }}</div>
+      {% if instructor.speciality %}
+      <div class="trainer-speciality">{{ instructor.speciality }}</div>
+      {% endif %}
+      {% if instructor.bio %}
+      <p class="trainer-bio">{{ instructor.bio }}</p>
+      {% endif %}
+      <div
+        style="display:flex; gap:8px; font-size:0.75rem; color:var(--text-muted); justify-content:center; margin-bottom:16px;">
+        <span>👥 {{ instructor.assigned_members.count }} member{{ instructor.assigned_members.count|pluralize }}</span>
+      </div>
+      <button class="select-btn" id="btn-{{ instructor.id }}">Choose This Trainer</button>
+    </div>
+    {% empty %}
+    <div class="no-trainers" style="grid-column: 1/-1;">
+      <span>🧑‍🏫</span>
+      <h3>No Trainers Available Yet</h3>
+      <p>An admin will assign you a trainer soon.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <a href="/portal/member/" class="skip-link">Skip for now — I'll choose later</a>
+
+  <!-- Confirm Bar -->
+  <div class="confirm-bar" id="confirm-bar">
+    <span id="selected-name" style="color:var(--text-primary); font-weight:600;"></span>
+    <button class="btn btn-primary" style="padding:10px 28px;" onclick="confirmSelection()">✅ Confirm Selection</button>
+    <button class="btn btn-outline btn-sm" onclick="clearSelection()">Cancel</button>
+  </div>
+
+  <script>
+    const t = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+
+    let selectedId = null;
+    let selectedName = null;
+
+    function selectTrainer(id, card) {
+      // Remove previous selection
+      document.querySelectorAll('.trainer-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('.select-btn').forEach(b => { b.classList.remove('chosen'); b.textContent = 'Choose This Trainer'; });
+
+      selectedId = id;
+      selectedName = card.querySelector('.trainer-name').textContent.trim();
+      card.classList.add('selected');
+      card.querySelector('.select-btn').classList.add('chosen');
+      card.querySelector('.select-btn').textContent = '✓ Selected';
+
+      document.getElementById('selected-name').textContent = `Trainer: ${selectedName}`;
+      document.getElementById('confirm-bar').classList.add('visible');
+    }
+
+    function clearSelection() {
+      selectedId = null;
+      selectedName = null;
+      document.querySelectorAll('.trainer-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('.select-btn').forEach(b => { b.classList.remove('chosen'); b.textContent = 'Choose This Trainer'; });
+      document.getElementById('confirm-bar').classList.remove('visible');
+    }
+
+    function confirmSelection() {
+      if (!selectedId) return;
+      const btn = document.querySelector('#confirm-bar .btn-primary');
+      btn.textContent = '⏳ Saving...';
+      btn.disabled = true;
+
+      fetch('/portal/member/select-trainer/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ instructor_id: selectedId })
+      }).then(r => r.json()).then(d => {
+        if (d.success) {
+          window.location.href = '/portal/member/';
+        } else {
+          btn.textContent = '✅ Confirm Selection';
+          btn.disabled = false;
+          alert(d.message || 'Could not save selection.');
+        }
+      }).catch(() => {
+        btn.textContent = '✅ Confirm Selection';
+        btn.disabled = false;
+        alert('Network error. Please try again.');
+      });
+    }
+
+    function filterTrainers(spec, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.trainer-card').forEach(c => {
+        c.style.display = (spec === 'all' || c.dataset.spec === spec) ? '' : 'none';
+      });
+    }
+
+    function getCookie(name) {
+      const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+      return v ? v[2] : null;
+    }
+  </script>
+</body>
+
+</html>

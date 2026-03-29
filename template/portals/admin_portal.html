@@ -1,0 +1,811 @@
+{% extends 'portals/base_portal.html' %}
+{% load static %}
+
+{% block title %}Admin Portal — GymPro{% endblock %}
+{% block portal_name %}Admin Control{% endblock %}
+{% block default_title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  .access-toggle {
+    appearance: none;
+    width: 44px;
+    height: 24px;
+    background: var(--border);
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .access-toggle:checked {
+    background: var(--teal);
+  }
+
+  .access-toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: var(--transition);
+  }
+
+  .access-toggle:checked::after {
+    left: 23px;
+  }
+
+  .feature-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .revenue-stat {
+    background: linear-gradient(135deg, var(--teal-glow), rgba(245, 158, 11, .1));
+    border: 1px solid var(--border-teal);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+  }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-section-label">Overview</div>
+<div class="nav-item active" data-section="sec-dashboard" data-title="Admin Dashboard" data-subtitle="System overview">
+  <span class="nav-icon">📊</span> Dashboard
+</div>
+<div class="nav-section-label">Management</div>
+<div class="nav-item" data-section="sec-members" data-title="Member Management" data-subtitle="All gym members">
+  <span class="nav-icon">👥</span> Members
+</div>
+<div class="nav-item" data-section="sec-staff" data-title="Staff Management" data-subtitle="Trainers & staff">
+  <span class="nav-icon">🧑‍🏫</span> Staff
+</div>
+<div class="nav-item" data-section="sec-access" data-title="Access Control" data-subtitle="Staff permissions">
+  <span class="nav-icon">🔐</span> Access Control
+</div>
+<div class="nav-section-label">Content</div>
+<div class="nav-item" data-section="sec-plans" data-title="Membership Plans" data-subtitle="Manage pricing">
+  <span class="nav-icon">💎</span> Plans
+</div>
+<div class="nav-item" data-section="sec-announcements" data-title="Announcements" data-subtitle="Post news & updates">
+  <span class="nav-icon">📣</span> Announcements
+</div>
+<div class="nav-item" data-section="sec-gallery" data-title="Gallery" data-subtitle="Public Overview Images">
+  <span class="nav-icon">🖼️</span> Gallery
+</div>
+<div class="nav-section-label">Finance</div>
+<div class="nav-item" data-section="sec-payments" data-title="Payments" data-subtitle="Transaction history">
+  <span class="nav-icon">💳</span> Payments
+</div>
+
+{% endblock %}
+
+{% block portal_content %}
+
+<!-- ─────── DASHBOARD ─────── -->
+<div class="portal-section active" id="sec-dashboard">
+  <div class="stats-grid" style="margin-bottom:24px;">
+    <div class="stat-card">
+      <div class="stat-number">{{ total_members }}</div>
+      <div class="stat-label">Total Members</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ total_staff }}</div>
+      <div class="stat-label">Staff / Trainers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ active_enrollments }}</div>
+      <div class="stat-label">Active Memberships</div>
+    </div>
+    <div class="revenue-stat">
+      <div class="stat-number" style="font-size:2rem;">NPR {{ total_revenue|floatformat:0 }}</div>
+      <div class="stat-label">Total Revenue</div>
+    </div>
+  </div>
+  <div class="grid-2" style="gap:20px;">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:16px;">💳 Recent Payments</div>
+      {% for tx in recent_transactions %}
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:.9rem;font-weight:600;">{{ tx.user.email|truncatechars:24 }}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">{{ tx.created_at|date:"M d, H:i" }}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;color:var(--teal-light);">NPR {{ tx.amount }}</div><span class="badge badge-green"
+            style="font-size:.7rem;">{{ tx.status }}</span>
+        </div>
+      </div>
+      {% empty %}<p style="color:var(--text-muted);">No transactions yet.</p>{% endfor %}
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:16px;">🟢 Currently Logged In Users</div>
+      {% for am in active_users %}
+      <div style="padding:12px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;">
+        <img src="{{ am.get_profile_image }}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--teal);">
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:.9rem;margin-bottom:2px;">{{ am.user.get_full_name|default:am.user.email }}</div>
+          <div style="color:var(--text-secondary);font-size:.75rem;">Joined: {{ am.joined_date|date:"M d, Y" }}</div>
+        </div>
+        <div style="text-align:right;">
+          {% if am.role == 'staff' %}
+            <span class="badge badge-gold" style="font-size:0.65rem;">Instructor</span>
+          {% else %}
+            <span class="badge badge-teal" style="font-size:0.65rem;">{{ am.active_plan_name|default:'Member'|truncatechars:15 }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}<p style="color:var(--text-muted);">No users are online right now.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ─────── MEMBERS ─────── -->
+<div class="portal-section" id="sec-members">
+  <div class="card">
+    <div class="section-header">
+      <span class="section-title">👥 All Members ({{ total_members }})</span>
+      <input type="text" class="form-control" style="width:220px;" placeholder="🔍 Search members..."
+        oninput="filterTable(this,'members-table')">
+    </div>
+    <div class="table-wrapper">
+      <table id="members-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Joined</th>
+            <th>Trainer</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in members %}
+          <tr>
+            <td>{{ m.user.email }}</td>
+            <td>{{ m.joined_date|date:"M d, Y" }}</td>
+            <td>{{ m.instructor.user.email|default:"—" }}</td>
+            <td>
+              <div style="display:flex;gap:4px;align-items:center;">
+                <button class="btn btn-outline btn-sm view-member-btn"
+                  data-name="{{ m.user.get_full_name|default:m.user.email }}" data-email="{{ m.user.email }}"
+                  data-phone="{{ m.phone }}" data-address="{{ m.address }}" data-bio="{{ m.bio }}"
+                  data-img="{{ m.get_profile_image }}" data-plan="{{ m.active_plan_name }}" data-instructor="{% if m.instructor %}{{ m.instructor.user.get_full_name|default:m.instructor.user.email }}{% else %}Unassigned{% endif %}" onclick="handleMemberView(this)">Details</button>
+                <select class="form-control" style="width:auto;font-size:0.75rem;"
+                  onchange="assignInstructor('{{ m.user.id }}',this.value)">
+                  <option value="">— Assign Instructor —</option>
+                  {% for s in all_staff %}
+                  <option value="{{ s.user.id }}" {% if m.instructor.user.id == s.user.id %}selected{% endif %}>{{ s.user.get_full_name|default:s.user.email }}</option>
+                  {% endfor %}
+                </select>
+                <button class="btn btn-danger btn-sm" onclick="deleteMember('{{ m.user.id }}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}<tr>
+            <td colspan="4" style="text-align:center;color:var(--text-muted);">No members yet.</td>
+          </tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── STAFF ─────── -->
+<div class="portal-section" id="sec-staff">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-header">
+      <span class="section-title">🧑‍🏫 Staff Accounts</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal('create-staff-modal')">+ Create Staff</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Speciality</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in all_staff %}
+          <tr>
+            <td>{{ s.user.email }}</td>
+            <td>{{ s.speciality|default:"—" }}</td>
+            <td>{{ s.joined_date|date:"M d, Y" }}</td>
+            <td>
+              <div style="display:flex;gap:4px;">
+                <button class="btn btn-outline btn-sm edit-staff-btn" data-id="{{ s.user.id }}"
+                  data-email="{{ s.user.email }}" data-name="{{ s.user.get_full_name|default:s.user.email }}" data-spec="{{ s.speciality }}" data-phone="{{ s.phone }}"
+                  data-bio="{{ s.bio }}" data-address="{{ s.address }}" onclick="handleStaffEdit(this)">Details</button>
+                <button class="btn btn-outline btn-sm"
+                  onclick="openAccessControl('{{ s.user.id }}', '{{ s.user.email|escapejs }}')">Access</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteStaff('{{ s.user.id }}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}<tr>
+            <td colspan="4" style="text-align:center;color:var(--text-muted);">No staff accounts yet.</td>
+          </tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── ACCESS CONTROL ─────── -->
+<div class="portal-section" id="sec-access">
+  <div class="card">
+    <div class="section-header">
+      <span class="section-title">🔐 Staff Access Control</span>
+      <select id="access-staff-sel" class="form-control" style="width:220px;"
+        onchange="loadStaffAccess(this.value,this.options[this.selectedIndex].text)">
+        <option value="">— Select Staff —</option>
+        {% for s in all_staff %}<option value="{{ s.user.id }}">{{ s.user.email }}</option>{% endfor %}
+      </select>
+    </div>
+    <div id="access-panel" style="display:none;">
+      <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:16px;">Toggle which features this staff member
+        can see in their portal.</p>
+      {% for key, label in feature_choices %}
+      <div class="feature-row">
+        <div>
+          <div style="font-weight:600;">{{ label }}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">Feature key: <code>{{ key }}</code></div>
+        </div>
+        <input type="checkbox" class="access-toggle" data-key="{{ key }}" onchange="savePermissions()">
+      </div>
+      {% endfor %}
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="savePermissions()">Save Permissions</button>
+    </div>
+    <div id="access-empty" style="text-align:center;padding:40px;color:var(--text-muted);">Select a staff member above
+      to manage their access.</div>
+  </div>
+</div>
+
+<!-- ─────── PLANS ─────── -->
+<div class="portal-section" id="sec-plans">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-header">
+      <span class="section-title">💎 Membership Plans ({{ plans|length }})</span>
+      <button class="btn btn-primary btn-sm" onclick="openAddPlan()">+ Add Plan</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:8px;">
+      {% for plan in plans %}
+      <div class="card" style="padding:16px;">
+        {% if plan.image_url %}<img src="{{ plan.image_url }}"
+          style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:12px;" loading="lazy">{% endif %}
+        <div style="font-weight:700;">{{ plan.name }} {% if plan.is_popular %}<span
+            class="badge badge-gold">Popular</span>{% endif %}</div>
+        <div style="font-size:1.4rem;font-weight:800;color:var(--teal-light);margin:8px 0;">NPR {{ plan.price }}</div>
+        <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px;">{{ plan.duration_days }} days</div>
+        <div style="margin-bottom:12px; font-size:0.75rem;">
+          <div style="color:var(--text-muted);margin-bottom:4px;">Allowed Tabs:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            {% for tab in plan.allowed_tabs %}
+            <span class="badge badge-teal" style="font-size:0.65rem;padding:2px 6px;">{{ tab }}</span>
+            {% empty %}
+            <span class="badge" style="font-size:0.65rem;padding:2px 6px;">All Tabs (Default)</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm w-full" onclick="editPlan(this)" data-id="{{ plan.id }}" data-name="{{ plan.name|escapejs }}" data-price="{{ plan.price }}" data-duration="{{ plan.duration_days }}" data-features="{{ plan.features|join:'\n'|escapejs }}" data-image="{{ plan.image_url|default:'' }}" data-popular="{{ plan.is_popular|yesno:'true,false' }}" data-tabs="{{ plan.allowed_tabs|join:','|escapejs }}">Edit</button>
+          <button class="btn btn-danger btn-sm w-full" onclick="deletePlan({{ plan.id }})">Delete</button>
+        </div>
+      </div>
+      {% empty %}<p style="color:var(--text-muted);">No plans created yet.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ─────── ANNOUNCEMENTS ─────── -->
+<div class="portal-section" id="sec-announcements">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-header">
+      <span class="section-title">📣 Announcements</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal('add-ann-modal')">+ Post Announcement</button>
+    </div>
+    {% for ann in announcements %}
+    <div style="padding:16px 0;border-bottom:1px solid var(--border);display:flex;gap:16px;align-items:flex-start;">
+      {% if ann.image_url %}<img src="{{ ann.image_url }}"
+        style="width:72px;height:72px;border-radius:10px;object-fit:cover;flex-shrink:0;" loading="lazy">{% endif %}
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div style="font-weight:700;margin-bottom:4px;">{{ ann.title }}</div>
+          <button class="btn btn-danger btn-sm" style="padding:2px 6px;"
+            onclick="deleteAnnouncement({{ ann.id }})">✕</button>
+        </div>
+        <div style="color:var(--text-secondary);font-size:.85rem;">{{ ann.body|truncatechars:100 }}</div>
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px;">{{ ann.created_at|date:"M d, Y" }}</div>
+      </div>
+    </div>
+    {% empty %}<p style="color:var(--text-muted);">No announcements yet.</p>{% endfor %}
+  </div>
+</div>
+
+<!-- ─────── GALLERY ─────── -->
+<div class="portal-section" id="sec-gallery">
+  <div class="card">
+    <div class="section-header">
+      <span class="section-title">🖼️ Gallery Management</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal('add-gallery-modal')">+ Add Image</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-top:20px;">
+      {% for img in gallery %}
+      <div class="card" style="padding:8px;position:relative;">
+        <img src="{{ img.image_url }}" style="width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:8px;" loading="lazy">
+        {% if img.caption %}<div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:4px;">{{ img.caption }}</div>{% endif %}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:0.7rem;color:var(--text-muted);">Order: {{ img.order }}</span>
+          <button class="btn btn-danger btn-sm" style="padding:2px 6px;" onclick="deleteGalleryImage({{ img.id }})">Delete</button>
+        </div>
+      </div>
+      {% empty %}
+      <p style="text-align:center;color:var(--text-muted);grid-column:1/-1;">No gallery images yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ─────── PAYMENTS ─────── -->
+<div class="portal-section" id="sec-payments">
+  <div class="card">
+    <div class="section-header">
+      <span class="section-title">💳 All Transactions</span>
+      <input type="text" class="form-control" style="width:200px;" placeholder="🔍 Filter..."
+        oninput="filterTable(this,'payments-table')">
+    </div>
+    <div class="table-wrapper">
+      <table id="payments-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Member</th>
+            <th>Plan</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>eSewa Ref</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in recent_transactions %}
+          <tr>
+            <td>{{ tx.created_at|date:"M d, Y" }}</td>
+            <td style="font-size:.85rem;">{{ tx.user.email }}</td>
+            <td>{{ tx.plan.name|default:"—" }}</td>
+            <td><strong>NPR {{ tx.amount }}</strong></td>
+            <td><span
+                class="badge {% if tx.status == 'success' %}badge-green{% elif tx.status == 'failed' %}badge-red{% else %}badge-gold{% endif %}">{{ tx.status|capfirst }}</span></td>
+            <td style="font-family:monospace;font-size:.75rem;">{{ tx.esewa_ref_id|default:"—"|truncatechars:18 }}</td>
+          </tr>
+          {% empty %}<tr>
+            <td colspan="6" style="text-align:center;color:var(--text-muted);">No transactions found.</td>
+          </tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ── MODALS ── -->
+<!-- Create Staff -->
+<div class="modal-overlay" id="create-staff-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Create Staff Account</span><button
+        class="modal-close">✕</button></div>
+    <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="staff-name"
+        class="form-control" placeholder="Jane Smith"></div>
+    <div class="form-group"><label class="form-label">Email</label><input type="email" id="staff-email"
+        class="form-control" placeholder="trainer@gympro.com"></div>
+    <div class="form-group"><label class="form-label">Password</label><input type="password" id="staff-password"
+        class="form-control" placeholder="Minimum 8 characters"></div>
+    <div class="form-group"><label class="form-label">Speciality</label><input type="text" id="staff-spec"
+        class="form-control" placeholder="e.g. Yoga, Strength Training"></div>
+    <button class="btn btn-primary w-full" onclick="createStaff()" style="justify-content:center;">Create
+      Account</button>
+  </div>
+</div>
+
+<!-- Add Plan -->
+<div class="modal-overlay" id="add-plan-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Membership Plan</span><button class="modal-close">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Plan Name</label><input type="text" id="plan-name"
+        class="form-control" placeholder="e.g. Premium Monthly"></div>
+    <div class="grid-2" style="gap:12px;">
+      <div class="form-group"><label class="form-label">Price (NPR)</label><input type="number" id="plan-price"
+          class="form-control"></div>
+      <div class="form-group"><label class="form-label">Duration (days)</label><input type="number" id="plan-duration"
+          class="form-control"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Features (one per line)</label><textarea id="plan-features"
+        class="form-control" rows="4" placeholder="Unlimited access&#10;Personal trainer&#10;Diet plan"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Plan Image</label>
+      <div id="plan-image-picker"></div>
+      <input type="hidden" id="plan-image-url">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Allowed Tabs (Features access)</label>
+      <div
+        style="background:var(--bg-dark); border:1px solid var(--border); border-radius:8px; padding:12px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        {% for key, label in tab_choices %}
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" class="plan-tab-toggle" value="{{ key }}" id="ptab-{{ key }}" checked
+            style="width:16px;height:16px;accent-color:var(--teal);">
+          <label for="ptab-{{ key }}" style="font-size:0.85rem;margin:0;cursor:pointer;color:var(--text-secondary);">{{ label }}</label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="plan-popular" style="width:18px;height:18px;accent-color:var(--teal);">
+      <label for="plan-popular" class="form-label" style="margin:0;">Mark as Popular</label>
+    </div>
+    <button class="btn btn-primary w-full" onclick="savePlan()" style="justify-content:center;">Save Plan</button>
+  </div>
+</div>
+
+<!-- Add Announcement -->
+<div class="modal-overlay" id="add-ann-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Post Announcement</span><button class="modal-close">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Title</label><input type="text" id="ann-title"
+        class="form-control" placeholder="Gym closure notice..."></div>
+    <div class="form-group"><label class="form-label">Body</label><textarea id="ann-body" class="form-control"
+        rows="4"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Image</label>
+      <div id="ann-image-picker"></div>
+      <input type="hidden" id="ann-image-url">
+    </div>
+    <button class="btn btn-primary w-full" onclick="postAnnouncement()" style="justify-content:center;">Post</button>
+  </div>
+</div>
+
+<!-- Edit Staff -->
+<div class="modal-overlay" id="edit-staff-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Edit Staff Profile</span><button class="modal-close">✕</button>
+    </div>
+    <input type="hidden" id="edit-staff-id">
+    <div class="form-group"><label class="form-label">Email (Read Only)</label><input type="text" id="edit-staff-email"
+        class="form-control" readonly style="opacity:0.7;"></div>
+    <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="edit-staff-name"
+        class="form-control"></div>
+    <div class="form-group"><label class="form-label">Speciality</label><input type="text" id="edit-staff-spec"
+        class="form-control"></div>
+    <div class="form-group"><label class="form-label">Phone</label><input type="text" id="edit-staff-phone"
+        class="form-control"></div>
+    <div class="form-group"><label class="form-label">Office Address</label><input type="text" id="edit-staff-address"
+        class="form-control"></div>
+    <div class="form-group"><label class="form-label">Public Bio</label><textarea id="edit-staff-bio"
+        class="form-control" rows="3"></textarea></div>
+    <button class="btn btn-primary w-full" onclick="saveStaffProfile()" style="justify-content:center;">Save
+      Changes</button>
+  </div>
+</div>
+
+<!-- Member Detail View -->
+<div class="modal-overlay" id="member-detail-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header"><span class="modal-title">Member Details</span><button class="modal-close">✕</button>
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <img src="" id="m-detail-img"
+        style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--teal);margin-bottom:12px;">
+      <h3 id="m-detail-name">Member Name</h3>
+      <div id="m-detail-email" style="color:var(--teal-light);font-weight:500;">email@example.com</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div><label class="form-label" style="font-size:0.75rem;margin-bottom:2px;">Phone</label>
+        <div id="m-detail-phone" style="font-weight:600;">-</div>
+      </div>
+      <div><label class="form-label" style="font-size:0.75rem;margin-bottom:2px;">Address</label>
+        <div id="m-detail-address" style="font-weight:600;">-</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:0.75rem;margin-bottom:2px;">Plan</label>
+        <div id="m-detail-plan" style="font-weight:600; color:var(--teal-light);">-</div>
+      </div>
+      <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:0.75rem;margin-bottom:2px;">Instructor</label>
+        <div id="m-detail-instructor" style="font-weight:600;">-</div>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label" style="font-size:0.75rem;margin-bottom:2px;">Bio</label>
+      <p id="m-detail-bio" style="color:var(--text-secondary);font-size:0.9rem;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Add Gallery Image -->
+<div class="modal-overlay" id="add-gallery-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Gallery Image</span><button class="modal-close">✕</button></div>
+    <div class="form-group">
+      <label class="form-label">Image</label>
+      <div id="gal-image-picker"></div>
+      <input type="hidden" id="gal-image-url">
+    </div>
+    <div class="form-group"><label class="form-label">Caption (Optional)</label><input type="text" id="gal-caption" class="form-control" placeholder="Image short description"></div>
+    <div class="form-group"><label class="form-label">Order</label><input type="number" id="gal-order" class="form-control" value="0"></div>
+    <button class="btn btn-primary w-full" onclick="saveGalleryImage()" style="justify-content:center;">Save Image</button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentAccessStaffId = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initMediaInput({ containerId: 'plan-image-picker', urlFieldId: 'plan-image-url', cloudName: CLOUDINARY_CLOUD, uploadPreset: CLOUDINARY_PRESET, type: 'image' });
+    initMediaInput({ containerId: 'ann-image-picker', urlFieldId: 'ann-image-url', cloudName: CLOUDINARY_CLOUD, uploadPreset: CLOUDINARY_PRESET, type: 'image' });
+
+    initMediaInput({
+      containerId: 'profile-pic-picker',
+      urlFieldId: 'profile-image-url',
+      cloudName: CLOUDINARY_CLOUD,
+      uploadPreset: CLOUDINARY_PRESET,
+      type: 'image',
+      callback: (url) => { document.getElementById('profile-img-preview').src = url; }
+    });
+  });
+
+  function createStaff() {
+    const data = {
+      full_name: document.getElementById('staff-name').value.trim(),
+      email: document.getElementById('staff-email').value.trim(),
+      password: document.getElementById('staff-password').value,
+      speciality: document.getElementById('staff-spec').value,
+    };
+    if (!data.full_name || !data.email || !data.password) { showToast('Full Name, Email and password required', 'error'); return; }
+    apiPost('/api/create-staff/', data).then(d => {
+      showToast(d.message, d.staff_id ? 'success' : 'error');
+      if (d.staff_id) { closeModal('create-staff-modal'); setTimeout(() => location.reload(), 800); }
+    });
+  }
+
+  function savePlan() {
+    const features = document.getElementById('plan-features').value.split('\n').map(f => f.trim()).filter(Boolean);
+    const allowed_tabs = Array.from(document.querySelectorAll('.plan-tab-toggle:checked')).map(cb => cb.value);
+    const planIdEle = document.getElementById('plan-id');
+    const data = {
+      id: planIdEle && planIdEle.value ? planIdEle.value : null,
+      name: document.getElementById('plan-name').value,
+      price: document.getElementById('plan-price').value,
+      duration_days: document.getElementById('plan-duration').value,
+      features,
+      allowed_tabs,
+      image_url: document.getElementById('plan-image-url').value,
+      is_popular: document.getElementById('plan-popular').checked,
+    };
+    apiPost('/portal/admin/plan/', data).then(d => {
+      showToast(d.message, d.id ? 'success' : 'error');
+      if (d.id) { closeModal('add-plan-modal'); setTimeout(() => location.reload(), 800); }
+    });
+  }
+
+  function postAnnouncement() {
+    const data = {
+      title: document.getElementById('ann-title').value,
+      body: document.getElementById('ann-body').value,
+      image_url: document.getElementById('ann-image-url').value,
+    };
+    apiPost('/portal/admin/announcement/', data).then(d => {
+      showToast(d.message, d.id ? 'success' : 'error');
+      if (d.id) { closeModal('add-ann-modal'); setTimeout(() => location.reload(), 800); }
+    });
+  }
+
+  function openAccessControl(staffId, staffEmail) {
+    document.querySelector('[data-section=sec-access]')?.click();
+    document.getElementById('access-staff-sel').value = staffId;
+    loadStaffAccess(staffId, staffEmail);
+  }
+
+  function loadStaffAccess(staffId, staffEmail) {
+    if (!staffId) { document.getElementById('access-panel').style.display = 'none'; document.getElementById('access-empty').style.display = 'block'; return; }
+    currentAccessStaffId = staffId;
+    fetch(`/portal/admin/access/${staffId}/`).then(r => r.json()).then(data => {
+      document.getElementById('access-panel').style.display = 'block';
+      document.getElementById('access-empty').style.display = 'none';
+      document.querySelectorAll('.access-toggle').forEach(el => {
+        el.checked = data.allowed_nav.includes(el.dataset.key);
+      });
+    });
+  }
+
+  function savePermissions() {
+    if (!currentAccessStaffId) return;
+    const allowed = Array.from(document.querySelectorAll('.access-toggle:checked')).map(el => el.dataset.key);
+    apiPost(`/portal/admin/access/${currentAccessStaffId}/`, { allowed_nav: allowed }).then(d => {
+      showToast(d.message, 'success');
+    });
+  }
+
+  function assignInstructor(memberId, instructorId) {
+    const iId = instructorId ? parseInt(instructorId) : null;
+    apiPost('/portal/admin/assign-instructor/', { member_id: memberId, instructor_id: iId }).then(d => {
+      showToast(d.message, d.message.includes('!') ? 'success' : 'error');
+    });
+  }
+
+  function filterTable(input, tableId) {
+    const val = input.value.toLowerCase();
+    document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+    });
+  }
+
+
+
+  function deleteMember(id) {
+    if (confirm('Permanently delete this member and all their data?')) {
+      apiPost(`/portal/admin/member/delete/${id}/`, {}).then(d => { showToast(d.message, 'info'); location.reload(); });
+    }
+  }
+  function deleteStaff(id) {
+    if (confirm('Permanently delete this staff account?')) {
+      apiPost(`/portal/admin/staff/delete/${id}/`, {}).then(d => { showToast(d.message, 'info'); location.reload(); });
+    }
+  }
+  function deletePlan(id) {
+    if (confirm('Delete this membership plan?')) {
+      apiPost(`/portal/admin/plan/delete/${id}/`, {}).then(d => { showToast(d.message, 'info'); location.reload(); });
+    }
+  }
+  function deleteAnnouncement(id) {
+    if (confirm('Delete this announcement?')) {
+      apiPost(`/portal/admin/announcement/delete/${id}/`, {}).then(d => { showToast(d.message, 'info'); location.reload(); });
+    }
+  }
+  function handleStaffEdit(el) {
+    openStaffEditor(
+      el.dataset.id,
+      el.dataset.email,
+      el.dataset.name,
+      el.dataset.spec,
+      el.dataset.phone,
+      el.dataset.bio,
+      el.dataset.address
+    );
+  }
+
+  function openStaffEditor(id, email, name, spec, phone, bio, address) {
+    document.getElementById('edit-staff-id').value = id;
+    document.getElementById('edit-staff-email').value = email;
+    document.getElementById('edit-staff-name').value = name || '';
+    document.getElementById('edit-staff-spec').value = spec || '';
+    document.getElementById('edit-staff-phone').value = phone || '';
+    document.getElementById('edit-staff-bio').value = bio || '';
+    document.getElementById('edit-staff-address').value = address || '';
+    openModal('edit-staff-modal');
+  }
+
+  function saveStaffProfile() {
+    const staffId = document.getElementById('edit-staff-id').value;
+    const data = {
+      full_name: document.getElementById('edit-staff-name').value,
+      speciality: document.getElementById('edit-staff-spec').value,
+      phone: document.getElementById('edit-staff-phone').value,
+      bio: document.getElementById('edit-staff-bio').value,
+      address: document.getElementById('edit-staff-address').value,
+    };
+    apiPost(`/api/update-staff/${staffId}/`, data).then(d => {
+      showToast(d.message, 'success');
+      closeModal('edit-staff-modal');
+      setTimeout(() => location.reload(), 800);
+    });
+  }
+
+  function handleMemberView(el) {
+    showMemberDetail(
+      el.dataset.name,
+      el.dataset.email,
+      el.dataset.phone,
+      el.dataset.address,
+      el.dataset.bio,
+      el.dataset.img,
+      el.dataset.plan,
+      el.dataset.instructor
+    );
+  }
+
+  function showMemberDetail(name, email, phone, address, bio, img, plan, instructor) {
+    document.getElementById('m-detail-name').textContent = name;
+    document.getElementById('m-detail-email').textContent = email;
+    document.getElementById('m-detail-phone').textContent = phone || 'N/A';
+    document.getElementById('m-detail-address').textContent = address || 'N/A';
+    document.getElementById('m-detail-bio').textContent = bio || 'No bio available';
+    document.getElementById('m-detail-img').src = img;
+    document.getElementById('m-detail-plan').textContent = plan || 'No Active Plan';
+    document.getElementById('m-detail-instructor').textContent = instructor || 'Unassigned';
+    openModal('member-detail-modal');
+  }
+
+  function openAddPlan() {
+    let planIdEle = document.getElementById('plan-id');
+    if (planIdEle) planIdEle.value = '';
+    document.getElementById('plan-name').value = '';
+    document.getElementById('plan-price').value = '';
+    document.getElementById('plan-duration').value = '';
+    document.getElementById('plan-features').value = '';
+    document.getElementById('plan-image-url').value = '';
+    document.getElementById('plan-popular').checked = false;
+    document.querySelectorAll('.plan-tab-toggle').forEach(cb => cb.checked = true);
+    document.querySelector('#add-plan-modal .modal-title').textContent = 'Add Membership Plan';
+    openModal('add-plan-modal');
+  }
+
+  function editPlan(btn) {
+    const d = btn.dataset;
+    let planIdEle = document.getElementById('plan-id');
+    if (!planIdEle) {
+      const inp = document.createElement('input');
+      inp.type = 'hidden';
+      inp.id = 'plan-id';
+      document.querySelector('#add-plan-modal .modal').appendChild(inp);
+      planIdEle = inp;
+    }
+    planIdEle.value = d.id;
+    document.getElementById('plan-name').value = d.name;
+    document.getElementById('plan-price').value = d.price;
+    document.getElementById('plan-duration').value = d.duration;
+    document.getElementById('plan-features').value = d.features;
+    document.getElementById('plan-image-url').value = d.image;
+    document.getElementById('plan-popular').checked = (d.popular === 'true');
+    
+    const tabs = d.tabs ? d.tabs.split(',') : [];
+    document.querySelectorAll('.plan-tab-toggle').forEach(cb => {
+      cb.checked = tabs.length === 0 || tabs.includes(cb.value);
+    });
+    
+    document.querySelector('#add-plan-modal .modal-title').textContent = 'Edit Membership Plan';
+    openModal('add-plan-modal');
+  }
+
+  // Gallery Logic
+  document.addEventListener('DOMContentLoaded', () => {
+    initMediaInput({ containerId: 'gal-image-picker', urlFieldId: 'gal-image-url', cloudName: CLOUDINARY_CLOUD, uploadPreset: CLOUDINARY_PRESET, type: 'image' });
+  });
+
+  function saveGalleryImage() {
+    const data = {
+      image_url: document.getElementById('gal-image-url').value,
+      caption: document.getElementById('gal-caption').value,
+      order: document.getElementById('gal-order').value
+    };
+    if (!data.image_url) { showToast('Please upload or provide an image URL', 'error'); return; }
+    apiPost('/portal/admin/gallery/', data).then(d => {
+      showToast(d.message, 'success');
+      if (d.id) { closeModal('add-gallery-modal'); setTimeout(() => location.reload(), 800); }
+    });
+  }
+
+  function deleteGalleryImage(id) {
+    if (!confirm('Remove this image from the gallery?')) return;
+    apiPost(`/portal/admin/gallery/delete/${id}/`, {}).then(d => {
+      showToast(d.message, 'info');
+      location.reload();
+    });
+  }
+</script>
+{% endblock %}

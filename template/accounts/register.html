@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join GymPro — Create Account</title>
+<link rel="stylesheet" href="{% static 'Css/main.css' %}">
+<style>
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);padding:20px;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(13,148,136,.18),transparent);pointer-events:none;}
+  .auth-card{width:100%;max-width:440px;position:relative;z-index:1;}
+  .auth-logo{text-align:center;margin-bottom:28px;}
+  .auth-logo .logo-icon{width:60px;height:60px;background:linear-gradient(135deg,var(--teal),#0f766e);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:12px;}
+  .input-icon-wrap{position:relative;}
+  .input-icon-wrap .form-control{padding-left:44px;}
+  .input-icon-wrap .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);}
+  .toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;}
+  .password-strength{height:4px;border-radius:2px;margin-top:6px;transition:all .3s;background:var(--border);}
+  .strength-text{font-size:.75rem;margin-top:4px;}
+  .error-msg{color:var(--red);font-size:.85rem;margin-top:8px;display:none;}
+  .success-msg{color:var(--green);font-size:.85rem;margin-top:8px;display:none;}
+  .auth-footer{text-align:center;margin-top:24px;color:var(--text-muted);font-size:.9rem;}
+  .auth-footer a{color:var(--teal-light);text-decoration:none;font-weight:600;}
+  .perks{display:flex;flex-direction:column;gap:6px;margin-bottom:24px;}
+  .perk{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-secondary);}
+  .btn-loader{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+{% csrf_token %}
+<div class="auth-card card">
+  <div class="auth-logo">
+    <div class="logo-icon">💪</div>
+    <h2 style="font-size:1.8rem;">Create Your Account</h2>
+    <p style="color:var(--text-muted);font-size:.9rem;margin-top:4px;">Start your fitness journey today</p>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Full Name</label>
+    <div class="input-icon-wrap">
+      <span class="icon">👤</span>
+      <input type="text" id="full_name" class="form-control" placeholder="John Doe">
+    </div>
+  </div>
+
+  <div class="perks">
+    <div class="perk">✅ Personalized diet & workout plans</div>
+    <div class="perk">✅ Book sessions with your trainer</div>
+    <div class="perk">✅ Track your progress over time</div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Email Address</label>
+    <div class="input-icon-wrap">
+      <span class="icon">📧</span>
+      <input type="email" id="email" class="form-control" placeholder="you@example.com">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Password</label>
+    <div class="input-icon-wrap">
+      <span class="icon">🔒</span>
+      <input type="password" id="password" class="form-control" placeholder="Minimum 8 characters" oninput="checkStrength(this.value)">
+      <button class="toggle-pass" type="button" onclick="togglePwd('password',this)">👁</button>
+    </div>
+    <div class="password-strength" id="strength-bar"></div>
+    <div class="strength-text" id="strength-text"></div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Confirm Password</label>
+    <div class="input-icon-wrap">
+      <span class="icon">🔒</span>
+      <input type="password" id="confirmPassword" class="form-control" placeholder="Re-enter your password">
+      <button class="toggle-pass" type="button" onclick="togglePwd('confirmPassword',this)">👁</button>
+    </div>
+  </div>
+
+  <p class="error-msg" id="error-msg"></p>
+  <p class="success-msg" id="success-msg"></p>
+
+  <button class="btn btn-primary w-full" id="reg-btn" onclick="doRegister()" style="justify-content:center;gap:10px;">
+    <span class="btn-loader" id="btn-loader"></span>
+    🚀 Create Account
+  </button>
+
+  <div class="auth-footer">
+    Already have an account? <a href="/login/">Sign in →</a>
+  </div>
+</div>
+
+<script>
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+function checkStrength(val) {
+  const bar = document.getElementById('strength-bar');
+  const txt = document.getElementById('strength-text');
+  if (!val) { bar.style.background='var(--border)'; bar.style.width='0'; txt.textContent=''; return; }
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const levels = [
+    {w:'25%',c:'#ef4444',l:'Weak'},
+    {w:'50%',c:'#f59e0b',l:'Fair'},
+    {w:'75%',c:'#06b6d4',l:'Good'},
+    {w:'100%',c:'#22c55e',l:'Strong'}
+  ];
+  const lvl = levels[score-1] || levels[0];
+  bar.style.width = lvl.w; bar.style.background = lvl.c;
+  txt.textContent = lvl.l; txt.style.color = lvl.c;
+}
+
+async function doRegister() {
+  const full_name = document.getElementById('full_name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const errEl = document.getElementById('error-msg');
+  const sucEl = document.getElementById('success-msg');
+  const btn = document.getElementById('reg-btn');
+  const loader = document.getElementById('btn-loader');
+
+  errEl.style.display='none'; sucEl.style.display='none';
+  if (!full_name) { showErr('Full Name is required.'); return; }
+  if (!email) { showErr('Email is required.'); return; }
+  if (!password || password.length < 8) { showErr('Password must be at least 8 characters.'); return; }
+  if (password !== confirmPassword) { showErr('Passwords do not match.'); return; }
+
+  btn.disabled=true; loader.style.display='block';
+  try {
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+      document.cookie.split('; ').find(r=>r.startsWith('csrftoken='))?.split('=')[1]||'';
+    const res = await fetch('/api/register/', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':csrf},
+      body: JSON.stringify({full_name, email, password, confirmPassword})
+    });
+    const data = await res.json();
+    if (res.ok) {
+      sucEl.textContent = data.message; sucEl.style.display='block';
+      document.getElementById('full_name').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('confirmPassword').value = '';
+      checkStrength(''); // reset strength bar
+    } else {
+      showErr(data.message || 'Registration failed.');
+    }
+  } catch(e) { showErr('Network error. Try again.'); }
+  finally { btn.disabled=false; loader.style.display='none'; }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent=msg; el.style.display='block';
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Enter') doRegister(); });
+const t = localStorage.getItem('theme')||'dark';
+document.documentElement.setAttribute('data-theme', t);
+</script>
+</body>
+</html>

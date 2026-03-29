@@ -1,0 +1,381 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GymPro — Nepal's Premier Fitness Destination</title>
+<meta name="description" content="Transform your body and mind at GymPro. Expert trainers, personalized plans, and eSewa payments.">
+<link rel="stylesheet" href="{% static 'Css/main.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+<style>
+/* ── Nav ── */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:999;padding:16px 40px;display:flex;align-items:center;justify-content:space-between;transition:all .3s;background:rgba(5,11,24,.0);}
+.navbar.scrolled{background:rgba(5,11,24,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-logo .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--teal),#0f766e);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.nav-logo span{font-weight:800;font-size:1.2rem;color:var(--text-primary);}
+.nav-links{display:flex;align-items:center;gap:8px;}
+.nav-links a{color:var(--text-secondary);text-decoration:none;font-weight:500;font-size:.9rem;padding:8px 14px;border-radius:8px;transition:var(--transition);}
+.nav-links a:hover{color:var(--text-primary);background:rgba(255,255,255,.05);}
+.nav-links .btn{padding:10px 22px;}
+.hamburger-nav{display:none;background:none;border:none;color:var(--text-primary);font-size:1.5rem;cursor:pointer;}
+/* ── Hero ── */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;padding:100px 20px 60px;}
+.hero-bg{position:absolute;inset:0;background:linear-gradient(135deg,#050b18 0%,#071424 40%,#0a1f2e 70%,#050b18 100%);z-index:0;}
+.hero-glow{position:absolute;top:20%;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(13,148,136,.22),transparent 70%);z-index:0;pointer-events:none;}
+.hero-particles{position:absolute;inset:0;z-index:0;overflow:hidden;}
+.hero-content{position:relative;z-index:1;max-width:800px;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--teal-glow);border:1px solid var(--border-teal);border-radius:50px;padding:8px 18px;font-size:.85rem;font-weight:600;color:var(--teal-light);margin-bottom:24px;}
+.hero h1{font-size:clamp(2.8rem,6vw,5rem);font-weight:900;line-height:1.1;margin-bottom:20px;}
+.hero h1 .accent{background:linear-gradient(135deg,var(--teal-light),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{font-size:1.15rem;color:var(--text-secondary);max-width:560px;margin:0 auto 36px;}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+.hero-scroll{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-muted);font-size:.8rem;animation:bounce 2s infinite;}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+/* ── Floating particles ── */
+.particle{position:absolute;width:2px;height:2px;background:var(--teal);border-radius:50%;animation:float linear infinite;opacity:0;}
+@keyframes float{0%{transform:translateY(100vh);opacity:1;}100%{transform:translateY(-10vh);opacity:0;}}
+/* ── Stats ── */
+.stats-section{padding:80px 40px;background:linear-gradient(180deg,var(--bg-dark),var(--bg-card));}
+.stats-container{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
+.stat-item{text-align:center;padding:32px 20px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-dark);transition:var(--transition);}
+.stat-item:hover{border-color:var(--border-teal);transform:translateY(-4px);}
+.stat-num{font-size:3rem;font-weight:900;background:linear-gradient(135deg,var(--teal-light),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat-label{color:var(--text-muted);font-size:.9rem;margin-top:6px;}
+/* ── Section titles ── */
+.section-tag{display:inline-block;background:var(--teal-glow);border:1px solid var(--border-teal);border-radius:50px;padding:6px 16px;font-size:.8rem;font-weight:700;color:var(--teal-light);margin-bottom:12px;}
+.section-main-title{font-size:clamp(1.8rem,3vw,2.8rem);font-weight:800;margin-bottom:12px;}
+.section-sub{color:var(--text-secondary);max-width:500px;margin:0 auto 48px;}
+/* ── Plans ── */
+.plans-section{padding:80px 40px;max-width:1100px;margin:0 auto;text-align:center;}
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:48px;}
+.plan-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:32px 28px;position:relative;transition:var(--transition);text-align:left;}
+.plan-card.popular{border-color:var(--teal);background:linear-gradient(135deg,rgba(13,148,136,.08),var(--bg-card));}
+.plan-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-teal);}
+.popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--teal),#0f766e);color:#fff;padding:4px 18px;border-radius:50px;font-size:.75rem;font-weight:700;white-space:nowrap;}
+.plan-image{width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:20px;background:var(--bg-dark);}
+.plan-name{font-size:1.2rem;font-weight:700;margin-bottom:4px;}
+.plan-price{font-size:2.4rem;font-weight:900;color:var(--teal-light);margin:12px 0;}
+.plan-price span{font-size:1rem;color:var(--text-muted);}
+.plan-duration{color:var(--text-muted);font-size:.85rem;margin-bottom:20px;}
+.plan-features{list-style:none;margin-bottom:24px;display:flex;flex-direction:column;gap:8px;}
+.plan-features li{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--text-secondary);}
+.plan-features li::before{content:'✓';color:var(--teal-light);font-weight:700;}
+/* ── Trainers ── */
+.trainers-section{padding:80px 40px;text-align:center;background:linear-gradient(180deg,var(--bg-card),var(--bg-dark));}
+.trainers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;max-width:1100px;margin:0 auto;}
+.trainer-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:var(--transition);}
+.trainer-card:hover{border-color:var(--border-teal);transform:translateY(-4px);}
+.trainer-img{width:100%;height:220px;object-fit:cover;background:linear-gradient(135deg,var(--bg-card),var(--bg-dark));}
+.trainer-info{padding:20px;}
+.trainer-name{font-weight:700;font-size:1.05rem;margin-bottom:4px;}
+.trainer-spec{color:var(--teal-light);font-size:.85rem;font-weight:500;margin-bottom:10px;}
+.trainer-bio{color:var(--text-muted);font-size:.82rem;line-height:1.5;}
+/* ── Gallery ── */
+.gallery-section{padding:80px 40px;text-align:center;}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;max-width:1100px;margin:0 auto;}
+.gallery-item{aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--bg-card);border:1px solid var(--border);transition:var(--transition);}
+.gallery-item:hover{transform:scale(1.03);border-color:var(--border-teal);}
+.gallery-item img{width:100%;height:100%;object-fit:cover;loading:lazy;}
+/* ── Testimonials ── */
+.testimonials-section{padding:80px 40px;text-align:center;background:linear-gradient(180deg,var(--bg-dark),var(--bg-card));}
+.testimonials-carousel{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:1100px;margin:48px auto 0;}
+.testimonial-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:var(--radius);padding:28px;text-align:left;}
+.testimonial-stars{color:var(--gold);font-size:1rem;margin-bottom:12px;}
+.testimonial-text{color:var(--text-secondary);font-size:.9rem;line-height:1.7;margin-bottom:16px;font-style:italic;}
+.testimonial-author{display:flex;align-items:center;gap:10px;}
+.testimonial-avatar{width:40px;height:40px;border-radius:50%;background:var(--teal-glow);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--teal-light);font-size:.9rem;}
+/* ── Announcements ── */
+.news-section{padding:80px 40px;max-width:1100px;margin:0 auto;text-align:center;}
+.news-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:48px;}
+.news-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;text-align:left;transition:var(--transition);}
+.news-card:hover{border-color:var(--border-teal);transform:translateY(-4px);}
+.news-img{width:100%;height:180px;object-fit:cover;background:var(--bg-dark);}
+.news-body{padding:20px;}
+.news-date{font-size:.75rem;color:var(--text-muted);margin-bottom:8px;}
+.news-title{font-weight:700;margin-bottom:8px;}
+.news-excerpt{color:var(--text-secondary);font-size:.85rem;line-height:1.6;}
+/* ── Contact ── */
+.contact-section{padding:80px 40px;background:linear-gradient(180deg,var(--bg-card),var(--bg-dark));}
+.contact-container{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
+.contact-info h2{margin-bottom:16px;}
+.contact-info p{color:var(--text-secondary);margin-bottom:24px;}
+.contact-detail{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:var(--text-secondary);}
+.contact-detail .ico{width:40px;height:40px;background:var(--teal-glow);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.contact-form{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;}
+/* ── Footer ── */
+.footer{background:var(--bg-card);border-top:1px solid var(--border);padding:40px;text-align:center;color:var(--text-muted);}
+.footer-logo{font-weight:800;font-size:1.2rem;color:var(--teal-light);margin-bottom:8px;}
+/* Responsive */
+@media(max-width:768px){
+  .navbar{padding:16px 20px;}
+  .nav-links{display:none;}
+  .nav-links.open{display:flex;flex-direction:column;position:absolute;top:70px;left:0;right:0;background:var(--bg-card);padding:20px;border-bottom:1px solid var(--border);}
+  .hamburger-nav{display:block;}
+  .stats-container{grid-template-columns:1fr 1fr;}
+  .contact-container{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="/" class="nav-logo">
+    <div class="logo-icon">💪</div>
+    <span>GymPro</span>
+  </a>
+  <div class="nav-links" id="nav-links">
+    <a href="#plans">Plans</a>
+    <a href="#trainers">Trainers</a>
+    <a href="#gallery">Gallery</a>
+    <a href="#news">News</a>
+    <a href="#contact">Contact</a>
+    <a href="/login/" class="btn btn-outline btn-sm">Login</a>
+    <a href="/register/" class="btn btn-primary btn-sm">Join Now</a>
+  </div>
+  <button class="hamburger-nav" onclick="document.getElementById('nav-links').classList.toggle('open')">☰</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-particles" id="particles"></div>
+  <div class="hero-content" data-aos="fade-up">
+    <div class="hero-badge">🏆 Nepal's #1 Digital Gym Platform</div>
+    <h1>Transform Your Body.<br><span class="accent">Elevate Your Life.</span></h1>
+    <p>Expert trainers, personalized nutrition & workout plans, smart scheduling, and seamless eSewa payments — all in one powerful platform.</p>
+    <div class="hero-cta">
+      <a href="/register/" class="btn btn-primary" style="font-size:1rem;padding:14px 32px;">🚀 Start Free Today</a>
+      <a href="#plans" class="btn btn-outline" style="font-size:1rem;padding:14px 32px;">View Membership Plans</a>
+    </div>
+  </div>
+  <div class="hero-scroll">↓ Scroll to explore</div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="stats-container">
+    <div class="stat-item" data-aos="fade-up" data-aos-delay="0">
+      <div class="stat-num" data-target="{{ total_members }}">0</div>
+      <div class="stat-label">Active Members</div>
+    </div>
+    <div class="stat-item" data-aos="fade-up" data-aos-delay="100">
+      <div class="stat-num" data-target="{{ total_trainers }}">0</div>
+      <div class="stat-label">Expert Trainers</div>
+    </div>
+    <div class="stat-item" data-aos="fade-up" data-aos-delay="200">
+      <div class="stat-num" data-target="{{ years_of_excellence }}">0</div>
+      <div class="stat-label">Years of Excellence</div>
+    </div>
+    <div class="stat-item" data-aos="fade-up" data-aos-delay="300">
+      <div class="stat-num" data-target="{{ total_sessions }}">0</div>
+      <div class="stat-label">Sessions Completed</div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANS -->
+<section class="plans-section" id="plans">
+  <div data-aos="fade-up">
+    <div class="section-tag">💎 Membership Plans</div>
+    <h2 class="section-main-title">Choose Your Journey</h2>
+    <p class="section-sub">Flexible plans for every goal. Pay securely with eSewa — Nepal's favourite digital wallet.</p>
+  </div>
+  <div class="plans-grid">
+    {% for plan in plans %}
+    <div class="plan-card {% if plan.is_popular %}popular{% endif %}" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}00">
+      {% if plan.is_popular %}<div class="popular-badge">⭐ Most Popular</div>{% endif %}
+      {% if plan.image_url %}
+      <img src="{{ plan.image_url }}" alt="{{ plan.name }}" class="plan-image" loading="lazy">
+      {% endif %}
+      <div class="plan-name">{{ plan.name }}</div>
+      <div class="plan-price">NPR {{ plan.price }}<span>/{{ plan.duration_days }} days</span></div>
+      <ul class="plan-features">
+        {% for feature in plan.features %}<li>{{ feature }}</li>{% endfor %}
+      </ul>
+      {% if user.is_authenticated %}
+      <a href="/payments/pay/{{ plan.id }}/" class="btn btn-gold w-full" style="justify-content:center;">⚡ Pay with eSewa</a>
+      {% else %}
+      <a href="/register/?next=/payments/pay/{{ plan.id }}/" class="btn btn-primary w-full" style="justify-content:center;">Join & Pay with eSewa</a>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);">Membership plans coming soon!</div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- TRAINERS -->
+<section class="trainers-section" id="trainers">
+  <div data-aos="fade-up">
+    <div class="section-tag">🏋️ Our Team</div>
+    <h2 class="section-main-title">Meet Your Trainers</h2>
+    <p class="section-sub">World-class instructors dedicated to your transformation.</p>
+  </div>
+  <div class="trainers-grid">
+    {% for trainer in trainers %}
+    <div class="trainer-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}00">
+      <img src="{{ trainer.get_profile_image }}" alt="{{ trainer.user.get_full_name }}" class="trainer-img" loading="lazy"
+           onerror="this.src='https://ui-avatars.com/api/?name={{ trainer.user.email }}&background=0d9488&color=fff&size=200'">
+      <div class="trainer-info">
+        <div class="trainer-name">{{ trainer.user.get_full_name|default:trainer.user.email }}</div>
+        <div class="trainer-spec">{{ trainer.speciality|default:"Fitness Trainer" }}</div>
+        <div class="trainer-bio">{{ trainer.bio|default:"Dedicated to helping you reach your fitness goals." }}</div>
+      </div>
+    </div>
+    {% empty %}
+    <div style="grid-column:1/-1;color:var(--text-muted);">Trainers profiles coming soon!</div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="gallery-section" id="gallery">
+  <div data-aos="fade-up">
+    <div class="section-tag">📸 Gallery</div>
+    <h2 class="section-main-title">Our Facility & Achievements</h2>
+  </div>
+  <div class="gallery-grid">
+    {% for img in gallery %}
+    <div class="gallery-item" data-aos="zoom-in" data-aos-delay="{{ forloop.counter0 }}0">
+      <img src="{{ img.image_url }}" alt="{{ img.caption }}" loading="lazy">
+    </div>
+    {% empty %}
+    {% for i in "123456789012" %}
+    <div class="gallery-item" style="background:linear-gradient(135deg,var(--bg-card),var(--bg-dark));display:flex;align-items:center;justify-content:center;font-size:2rem;">💪</div>
+    {% endfor %}
+    {% endfor %}
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section" id="testimonials">
+  <div data-aos="fade-up">
+    <div class="section-tag">💬 Success Stories</div>
+    <h2 class="section-main-title">What Our Members Say</h2>
+  </div>
+  <div class="testimonials-carousel">
+    <div class="testimonial-card" data-aos="fade-up" data-aos-delay="0">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">"Lost 15kg in 4 months! The personalized diet plan from my trainer made all the difference. GymPro changed my life completely."</div>
+      <div class="testimonial-author"><div class="testimonial-avatar">R</div><div><div style="font-weight:600;font-size:.9rem;">Rajesh Thapa</div><div style="font-size:.75rem;color:var(--text-muted);">Member since 2024</div></div></div>
+    </div>
+    <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">"The eSewa payment and online booking is so convenient. I can manage everything from my phone. Best gym platform in Nepal!"</div>
+      <div class="testimonial-author"><div class="testimonial-avatar">S</div><div><div style="font-weight:600;font-size:.9rem;">Sunita Rai</div><div style="font-size:.75rem;color:var(--text-muted);">Member since 2024</div></div></div>
+    </div>
+    <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">"My trainer tracks my progress in real-time and adjusts my workout. The progress charts keep me motivated every single day."</div>
+      <div class="testimonial-author"><div class="testimonial-avatar">B</div><div><div style="font-weight:600;font-size:.9rem;">Bikash Gurung</div><div style="font-size:.75rem;color:var(--text-muted);">Member since 2023</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWS -->
+{% if announcements %}
+<section class="news-section" id="news">
+  <div data-aos="fade-up">
+    <div class="section-tag">📣 News & Updates</div>
+    <h2 class="section-main-title">Latest from GymPro</h2>
+  </div>
+  <div class="news-grid">
+    {% for ann in announcements %}
+    <div class="news-card" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}00">
+      {% if ann.image_url %}<img src="{{ ann.image_url }}" alt="{{ ann.title }}" class="news-img" loading="lazy">{% endif %}
+      <div class="news-body">
+        <div class="news-date">{{ ann.created_at|date:"M d, Y" }}</div>
+        <div class="news-title">{{ ann.title }}</div>
+        <div class="news-excerpt">{{ ann.body|truncatechars:120 }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <div class="contact-container">
+    <div class="contact-info" data-aos="fade-right">
+      <div class="section-tag">📍 Find Us</div>
+      <h2 class="section-main-title">Get In Touch</h2>
+      <p>We're here to help you start your fitness journey. Visit us or reach out anytime.</p>
+      <div class="contact-detail"><div class="ico">📍</div><div><strong>Address</strong><br><span style="color:var(--text-muted);">Kathmandu, Nepal</span></div></div>
+      <div class="contact-detail"><div class="ico">📞</div><div><strong>Phone</strong><br><span style="color:var(--text-muted);">+977-9800000000</span></div></div>
+      <div class="contact-detail"><div class="ico">📧</div><div><strong>Email</strong><br><span style="color:var(--text-muted);">hello@gympro.com.np</span></div></div>
+      <div style="margin-top:24px;border-radius:12px;overflow:hidden;height:200px;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);">🗺 Map Embed</div>
+    </div>
+    <div class="contact-form" data-aos="fade-left">
+      <h3 style="margin-bottom:24px;">Send a Message</h3>
+      <div class="form-group"><label class="form-label">Your Name</label><input type="text" class="form-control" placeholder="Hari Prasad Sharma"></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" placeholder="you@example.com"></div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-control" rows="4" placeholder="How can we help you?"></textarea></div>
+      <button class="btn btn-primary w-full" style="justify-content:center;" onclick="showToast('Message sent! We will get back to you soon.','success')">Send Message →</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo">💪 GymPro</div>
+  <p>Nepal's Premier Digital Fitness Platform — Powered by eSewa</p>
+  <p style="margin-top:12px;font-size:.8rem;">© 2025 GymPro. All rights reserved.</p>
+</footer>
+
+<div id="toast-container"></div>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="{% static 'JS/portal.js' %}"></script>
+<script>
+// AOS init
+AOS.init({ duration: 700, once: true, easing: 'ease-out-cubic' });
+
+// Navbar scroll effect
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// Animated counter
+function animateCounter(el, target) {
+  let start = 0;
+  const step = Math.ceil(target / 60);
+  const timer = setInterval(() => {
+    start += step;
+    if (start >= target) { el.textContent = target.toLocaleString(); clearInterval(timer); }
+    else el.textContent = start.toLocaleString();
+  }, 25);
+}
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const target = parseInt(e.target.dataset.target) || 0;
+      animateCounter(e.target, target);
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.stat-num[data-target]').forEach(el => io.observe(el));
+
+// Particles
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `left:${Math.random()*100}%;animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;width:${Math.random()*3+1}px;height:${Math.random()*3+1}px;opacity:${Math.random()*.5+.1}`;
+    container.appendChild(p);
+  }
+}
+createParticles();
+
+// Theme init
+const t = localStorage.getItem('theme')||'dark';
+document.documentElement.setAttribute('data-theme', t);
+</script>
+</body>
+</html>

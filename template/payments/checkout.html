@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pay with eSewa — GymPro</title>
+<link rel="stylesheet" href="{% static 'Css/main.css' %}">
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);padding:20px;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(13,148,136,.15),transparent);pointer-events:none;}
+.checkout-card{max-width:500px;width:100%;position:relative;z-index:1;}
+.esewa-logo{background:#60bb46;color:#fff;padding:10px 20px;border-radius:10px;font-weight:800;font-size:1.1rem;display:inline-block;margin-bottom:16px;}
+.plan-summary{background:var(--bg-dark);border:1px solid var(--border-teal);border-radius:var(--radius-sm);padding:20px;margin-bottom:24px;}
+.price-big{font-size:2.5rem;font-weight:900;color:var(--teal-light);}
+.secure-badge{display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:.8rem;justify-content:center;margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="checkout-card card">
+  <a href="/" style="color:var(--text-muted);text-decoration:none;font-size:.85rem;">← Back</a>
+  <h2 style="margin:16px 0 8px;">Complete Your Payment</h2>
+  <p style="color:var(--text-muted);margin-bottom:20px;">You're one step away from starting your transformation.</p>
+
+  <div class="plan-summary">
+    {% if plan.image_url %}<img src="{{ plan.image_url }}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:12px;" loading="lazy">{% endif %}
+    <div style="font-weight:700;font-size:1.1rem;margin-bottom:4px;">{{ plan.name }}</div>
+    <div style="color:var(--text-muted);font-size:.85rem;margin-bottom:12px;">{{ plan.duration_days }} days access</div>
+    <div class="price-big">NPR {{ plan.price }}</div>
+    <ul style="margin-top:12px;list-style:none;display:flex;flex-direction:column;gap:6px;">
+      {% for f in plan.features %}<li style="font-size:.85rem;color:var(--text-secondary);">✓ {{ f }}</li>{% endfor %}
+    </ul>
+  </div>
+
+  <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:16px;">Click below to proceed to eSewa's secure payment page:</p>
+
+  <!-- eSewa v2 Payment Form -->
+  <form action="{{ esewa_url }}" method="POST" id="esewa-form">
+    <input type="hidden" name="amount" value="{{ amount }}">
+    <input type="hidden" name="tax_amount" value="0">
+    <input type="hidden" name="total_amount" value="{{ amount }}">
+    <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}">
+    <input type="hidden" name="product_code" value="{{ product_code }}">
+    <input type="hidden" name="product_service_charge" value="0">
+    <input type="hidden" name="product_delivery_charge" value="0">
+    <input type="hidden" name="success_url" value="{{ success_url }}">
+    <input type="hidden" name="failure_url" value="{{ failure_url }}">
+    <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code">
+    <input type="hidden" name="signature" value="{{ signature }}">
+    <button type="submit" class="btn w-full" style="background:#60bb46;color:#fff;font-size:1.05rem;padding:16px;justify-content:center;border-radius:12px;font-weight:700;">
+      💚 Pay NPR {{ amount }} with eSewa
+    </button>
+  </form>
+
+  <div class="secure-badge">🔒 Secured by eSewa · 256-bit SSL encryption</div>
+
+  <div style="text-align:center;margin-top:16px;">
+    <a href="/portal/member/" style="color:var(--text-muted);font-size:.85rem;text-decoration:none;">Cancel and go back</a>
+  </div>
+</div>
+<script>
+const t = localStorage.getItem('theme')||'dark';
+document.documentElement.setAttribute('data-theme', t);
+</script>
+</body>
+</html>

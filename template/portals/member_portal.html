@@ -1,0 +1,1403 @@
+{% extends 'portals/base_portal.html' %}
+{% load static %}
+
+{% block title %}Member Portal — GymPro{% endblock %}
+{% block portal_name %}Member Portal{% endblock %}
+{% block default_title %}My Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
+<style>
+.expiry-ring{width:120px;height:120px;position:relative;margin:0 auto 16px;}
+.expiry-ring svg{transform:rotate(-90deg);}
+.expiry-ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.macro-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;margin-top:6px;}
+.macro-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+.workout-day-tab, .diet-day-tab{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text-secondary);cursor:pointer;font-family:inherit;font-size:.85rem;transition:var(--transition);}
+.workout-day-tab.active, .diet-day-tab.active{background:var(--teal-glow);color:var(--teal-light);border-color:var(--border-teal);}
+.exercise-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:12px;padding:16px;transition:var(--transition);}
+.exercise-card:hover{border-color:var(--border-teal);}
+.bmi-widget{background:linear-gradient(135deg,var(--teal-glow),rgba(245,158,11,.05));border:1px solid var(--border-teal);border-radius:var(--radius);padding:24px;}
+.gauge-svg{width:160px;height:auto;}
+.gauge-bg{fill:none;stroke:var(--bg-alt);stroke-width:8;}
+.gauge-fill{fill:none;stroke:var(--teal);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 0.8s ease-out;stroke-dasharray:125.6;}
+.gauge-text{font-size:16px;font-weight:800;fill:var(--text-primary);text-anchor:middle;}
+.gauge-label{font-size:7px;fill:var(--text-muted);text-anchor:middle;text-transform:uppercase;letter-spacing:0.5px;}
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-section-label">Main</div>
+{% if 'dashboard' in allowed_tabs %}
+<div class="nav-item active" data-section="sec-dashboard" data-title="My Dashboard" data-subtitle="Welcome back!">
+  <span class="nav-icon">🏠</span> Dashboard
+</div>
+{% endif %}
+{% if 'booking' in allowed_tabs %}
+<div class="nav-item" data-section="sec-booking" data-title="Book a Session" data-subtitle="Reserve your training slot">
+  <span class="nav-icon">📅</span> Book Session
+</div>
+{% endif %}
+{% if 'diet' in allowed_tabs %}
+<div class="nav-item" data-section="sec-diet" data-title="My Diet Plan" data-subtitle="Nutrition by your trainer">
+  <span class="nav-icon">🥗</span> Diet Plan
+</div>
+{% endif %}
+{% if 'workout' in allowed_tabs %}
+<div class="nav-item" data-section="sec-workout" data-title="My Workout Plan" data-subtitle="Training schedule">
+  <span class="nav-icon">💪</span> Workout Plan
+</div>
+{% endif %}
+{% if 'global_workout' in allowed_tabs %}
+<div class="nav-item" data-section="sec-global-workout" data-title="Workout Library" data-subtitle="Explore training programs">
+  <span class="nav-icon">🌍</span> Workout Library
+</div>
+{% endif %}
+
+<div class="nav-section-label">Health Tracking</div>
+{% if 'checklist' in allowed_tabs %}
+<div class="nav-item" data-section="sec-checklist" data-title="Daily Checklist" data-subtitle="Your goals for today">
+  <span class="nav-icon">🚀</span> Daily Checklist
+</div>
+{% endif %}
+{% if 'progress' in allowed_tabs %}
+<div class="nav-item" data-section="sec-progress" data-title="Progress Tracker" data-subtitle="Your transformation dashboard">
+  <span class="nav-icon">📈</span> My Progress
+</div>
+{% endif %}
+{% if 'bmi' in allowed_tabs %}
+<div class="nav-item" data-section="sec-bmi" data-title="BMI Calculator" data-subtitle="Know your health metrics">
+  <span class="nav-icon">⚖️</span> BMI Calculator
+</div>
+{% endif %}
+{% if 'nutrient' in allowed_tabs %}
+<div class="nav-item" data-section="sec-nutrient" data-title="Nutrient Calculator" data-subtitle="Lookup food nutrition facts">
+  <span class="nav-icon">🍎</span> Nutrient Calc
+</div>
+{% endif %}
+
+<div class="nav-section-label">Account</div>
+{% if 'payments' in allowed_tabs %}
+<div class="nav-item" data-section="sec-payments" data-title="Payment History" data-subtitle="Your transactions">
+  <span class="nav-icon">💳</span> Payments
+</div>
+{% endif %}
+{% if 'profile' in allowed_tabs %}
+<div class="nav-item" data-section="sec-profile" data-title="My Profile" data-subtitle="Manage your settings">
+  <span class="nav-icon">👤</span> My Profile
+</div>
+{% endif %}
+{% endblock %}
+
+{% block portal_content %}
+
+<!-- ── EXPIRY BANNER ── -->
+{% if enrollment %}
+  {% if enrollment.is_expired %}
+  <div class="expiry-banner">
+    <span style="font-size:1.5rem;">🚨</span>
+    <div style="flex:1;">
+      <strong>Membership Expired</strong> — Your membership expired on {{ enrollment.end_date|date:"M d, Y" }}.
+    </div>
+    <a href="#plans" class="btn btn-danger btn-sm" onclick="document.querySelector('[data-section=sec-payments]').click()">⚡ Renew with eSewa →</a>
+  </div>
+  {% elif enrollment.is_expiring_soon %}
+  <div class="expiry-banner warning">
+    <span style="font-size:1.5rem;">⚠️</span>
+    <div style="flex:1;">
+      <strong>Expiring Soon</strong> — Your membership expires in <strong>{{ enrollment.days_remaining }} day{{ enrollment.days_remaining|pluralize }}</strong>.
+    </div>
+    <a href="/payments/pay/{{ enrollment.plan.id }}/" class="btn btn-gold btn-sm">⚡ Renew with eSewa →</a>
+  </div>
+  {% endif %}
+{% else %}
+<div class="expiry-banner">
+  <span style="font-size:1.5rem;">💡</span>
+  <div style="flex:1;"><strong>No active membership</strong> — Choose a plan and get started!</div>
+  <a href="/#plans" class="btn btn-gold btn-sm">View Plans →</a>
+</div>
+{% endif %}
+
+
+
+{% if 'dashboard' in allowed_tabs %}
+<!-- ─────────── DASHBOARD ─────────── -->
+<div class="portal-section active" id="sec-dashboard">
+  <div class="stats-grid" style="margin-bottom:24px;">
+    <div class="stat-card">
+      <div style="font-size:2rem;margin-bottom:8px;">{% if enrollment and not enrollment.is_expired %}✅{% else %}❌{% endif %}</div>
+      <div class="stat-number" style="font-size:1.2rem;">{% if enrollment %}{{ enrollment.plan.name }}{% else %}—{% endif %}</div>
+      <div class="stat-label">Membership Plan</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{% if enrollment and not enrollment.is_expired %}{{ enrollment.days_remaining }}{% else %}0{% endif %}</div>
+      <div class="stat-label">Days Remaining</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ upcoming_bookings|length }}</div>
+      <div class="stat-label">Upcoming Sessions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ progress_logs|length }}</div>
+      <div class="stat-label">Progress Logs</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:20px;">
+    <div class="card">
+      <div class="section-header">
+        <span class="section-title">📅 Upcoming Sessions</span>
+        <button class="btn btn-outline btn-sm" onclick="document.querySelector('[data-section=sec-booking]').click()">Book More</button>
+      </div>
+      {% if upcoming_bookings %}
+      {% for b in upcoming_bookings %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-weight:600;font-size:.9rem;">{{ b.slot.title|default:"Training Session" }}{% if b.slot.instructor %} with {{ b.slot.instructor.get_full_name|default:b.slot.instructor.email }}{% endif %}</div>
+          <div style="color:var(--text-muted);font-size:.8rem;">{{ b.slot.date|date:"D, M d" }} · {{ b.slot.start_time|time:"H:i" }}–{{ b.slot.end_time|time:"H:i" }}</div>
+        </div>
+        <span class="badge badge-teal">Confirmed</span>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p style="color:var(--text-muted);font-size:.9rem;">No upcoming sessions. <a href="#" onclick="document.querySelector('[data-section=sec-booking]').click();return false;" style="color:var(--teal-light);">Book one →</a></p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="section-header"><span class="section-title">📣 Announcements</span></div>
+      {% if announcements %}
+      {% for ann in announcements %}
+      <div style="padding:12px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;">
+        {% if ann.image_url %}
+        <img src="{{ ann.image_url }}" style="width:50px;height:50px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+        {% endif %}
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:.9rem;margin-bottom:2px;">{{ ann.title }}</div>
+          <div style="color:var(--text-secondary);font-size:.8rem;line-height:1.3;">{{ ann.body|truncatechars:80 }}</div>
+          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">{{ ann.created_at|date:"M d, Y" }}</div>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p style="color:var(--text-muted);font-size:.9rem;">No announcements yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if 'booking' in allowed_tabs %}
+{% if 'checklist' in allowed_tabs %}
+<!-- ─────────── DAILY CHECKLIST ─────────── -->
+<div class="portal-section" id="sec-checklist">
+  {% if needs_trainer %}
+  <!-- ── TRAINER SELECTION PROMPT ── -->
+  <div class="expiry-banner" style="background: linear-gradient(90deg, #0d9488, #14b8a6); border-color: #5eead4; color: #fff; margin-bottom: 24px;">
+    <span style="font-size:1.5rem;">🧑‍🏫</span>
+    <div style="flex:1;">
+      <strong>Welcome to GymPro!</strong> — You haven't chosen a trainer yet. Select an expert to get your custom plans.
+    </div>
+    <a href="{% url 'select_trainer_view' %}" class="btn btn-sm" style="background: #fff; color: #0d9488; font-weight: 700;">Choose Your Trainer →</a>
+  </div>
+  {% endif %}
+  <div style="display:flex; flex-wrap:wrap; gap:24px; align-items:stretch;">
+    <!-- ─────── TODAY'S CHECKLIST ─────── -->
+    <div class="card" style="flex:1 1 500px; background: linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border: 1px solid var(--border-teal); margin-bottom:0;">
+      <div class="section-header">
+        <span class="section-title">🚀 Today's Checklist ({{ today_name }})</span>
+        <div id="overall-progress-container" style="display:flex; align-items:center; gap:10px;">
+            <div class="macro-bar" style="width:100px; height:10px; background:var(--bg);">
+                <div id="overall-progress-fill" class="macro-fill" style="width:0%; background:var(--teal);"></div>
+            </div>
+            <span id="overall-progress-text" style="font-size:0.8rem; font-weight:700; color:var(--teal-light);">0%</span>
+        </div>
+      </div>
+      
+      <div class="grid-2" style="gap:20px;">
+        <!-- Diet Checklist -->
+        <div>
+          <h4 style="margin-bottom:12px; display:flex; justify-content:space-between;">
+              <span>🥗 Meals</span>
+              <span style="font-size:0.75rem; color:var(--text-muted);" id="diet-count">0/0</span>
+          </h4>
+          <div id="today-meals-list" style="display:flex; flex-direction:column; gap:10px;">
+            {% for meal in today_meals %}
+            <div class="card" style="padding:12px; display:flex; justify-content:space-between; align-items:center; background:var(--bg);">
+              <div style="display:flex; align-items:center; gap:12px;">
+                {% if meal.image_url %}
+                <img src="{{ meal.image_url }}" style="width:40px; height:40px; border-radius:6px; object-fit:cover; border:1px solid var(--border);">
+                {% endif %}
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <input type="checkbox" class="task-check" data-type="meal" data-id="{{ meal.id }}" data-day="today" onchange="toggleTask(this)" {% if meal.id in meal_completion_ids %}checked{% endif %} style="width:18px; height:18px; accent-color:var(--teal);">
+                  <div>
+                    <div style="font-weight:600; font-size:0.85rem;">{{ meal.name }}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">{{ meal.get_meal_type_display }} · {{ meal.calories }}k</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <p style="color:var(--text-muted); font-size:0.85rem;">No meals planned for today.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Workout Checklist -->
+        <div>
+          <h4 style="margin-bottom:12px; display:flex; justify-content:space-between;">
+              <span>💪 Exercises</span>
+              <span style="font-size:0.75rem; color:var(--text-muted);" id="workout-count">0/0</span>
+          </h4>
+          <div id="today-exercises-list" style="display:flex; flex-direction:column; gap:10px;">
+            {% for ex in today_exercises %}
+            <div class="card" style="padding:12px; background:var(--bg);">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <input type="checkbox" class="task-check" data-type="exercise" data-id="{{ ex.id }}" data-day="today" onchange="toggleTask(this)" {% if ex.id in exercise_completion_ids %}checked{% endif %} style="width:18px; height:18px; accent-color:var(--teal);">
+                  <div>
+                    <div style="font-weight:600; font-size:0.85rem;">{{ ex.name }}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">{{ ex.sets }}x{{ ex.reps }}{% if ex.rest_seconds %} · {{ ex.rest_seconds }}s rest{% endif %}</div>
+                  </div>
+                </div>
+                {% if ex.video_url %}
+                <a href="{{ ex.video_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="padding:4px 10px; font-size:0.8rem; text-decoration:none;">▶ Watch</a>
+                {% endif %}
+              </div>
+              {% if ex.notes %}<p style="color:var(--text-muted); font-size:0.78rem; margin:8px 0 0 30px;">{{ ex.notes }}</p>{% endif %}
+            </div>
+            {% empty %}
+            <p style="color:var(--text-muted); font-size:0.85rem;">Rest day! No specific exercises.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if profile.instructor %}
+    <!-- ─────── YOUR TRAINER ─────── -->
+    <div class="card" style="flex:1 1 300px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:linear-gradient(135deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal); margin-bottom:0;">
+        <img src="{{ profile.instructor.get_profile_image }}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:4px solid var(--teal); margin-bottom:16px;" alt="instructor">
+        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-weight:700;">Your Dedicated Trainer</div>
+        <div style="font-size:1.3rem; font-weight:800; color:var(--text-primary); margin:8px 0;">{{ profile.instructor.user.get_full_name|default:profile.instructor.user.email }}</div>
+        <div style="font-size:0.9rem; color:var(--teal-light);">{{ profile.instructor.speciality|default:'Fitness Expert' }}</div>
+        {% if profile.instructor.bio %}
+        <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:10px; line-height:1.5; max-width:280px;">{{ profile.instructor.bio }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ─────── PROGRESS LOGGING ─────── -->
+  <div class="grid-2" style="gap:20px; margin-top:24px;">
+    <div class="card">
+      <div class="section-header" style="justify-content:space-between;">
+        <span class="section-title">📊 Log Daily Progress</span>
+        <input type="date" id="p-date" class="form-control" style="max-width:140px; padding:4px 8px; font-size:0.8rem;">
+      </div>
+      <div class="grid-2" style="gap:12px;">
+        <div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="p-weight" class="form-control" step="0.1" placeholder="e.g. 72.5"></div>
+        <div class="form-group"><label class="form-label">Height (cm)</label><input type="number" id="p-height" class="form-control" step="0.1" placeholder="e.g. 175"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Body Fat %</label><input type="number" id="p-fat" class="form-control" step="0.1" placeholder="e.g. 18.5"></div>
+      <div class="grid-2" style="gap:12px;">
+        <div class="form-group"><label class="form-label">Waist (cm)</label><input type="number" id="p-waist" class="form-control" step="0.1"></div>
+        <div class="form-group"><label class="form-label">Chest (cm)</label><input type="number" id="p-chest" class="form-control" step="0.1"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea id="p-notes" class="form-control" rows="2" placeholder="How are you feeling today?"></textarea></div>
+      <button class="btn btn-primary w-full" onclick="logProgress()" style="justify-content:center;">Save Progress</button>
+    </div>
+    <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+      <div class="section-header" style="width:100%"><span class="section-title">🚀 Today's Achievement</span></div>
+      <div style="display:flex; gap:30px; flex-wrap:wrap; justify-content:center; margin-top:10px;">
+        <!-- Diet Gauge -->
+        <div style="text-align:center;">
+          <svg viewBox="0 0 100 60" class="gauge-svg">
+            <path d="M 10 50 A 40 40 0 0 1 90 50" class="gauge-bg"/>
+            <path id="gauge-diet-fill" d="M 10 50 A 40 40 0 0 1 90 50" class="gauge-fill" style="stroke-dashoffset: 125.6;"/>
+            <text x="50" y="45" id="gauge-diet-val" class="gauge-text">0%</text>
+            <text x="50" y="58" class="gauge-label">DIET PROGRESS</text>
+          </svg>
+        </div>
+        <!-- Workout Gauge -->
+        <div style="text-align:center;">
+          <svg viewBox="0 0 100 60" class="gauge-svg">
+            <path d="M 10 50 A 40 40 0 0 1 90 50" class="gauge-bg"/>
+            <path id="gauge-workout-fill" d="M 10 50 A 40 40 0 0 1 90 50" class="gauge-fill" style="stroke-dashoffset: 125.6; stroke: var(--gold);"/>
+            <text x="50" y="45" id="gauge-workout-val" class="gauge-text">0%</text>
+            <text x="50" y="58" class="gauge-label">WORKOUT PROGRESS</text>
+          </svg>
+        </div>
+      </div>
+      
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(80px, 1fr)); gap:12px; width:100%; margin-top:20px; border-top:1px solid var(--border); padding-top:20px;">
+        <div style="text-align:center;">
+          <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Weight</div>
+          <div style="font-weight:800; color:var(--teal-light); font-size:1.1rem;" id="disp-weight">{{ today_log.weight_kg|default:"--" }} <span style="font-size:0.7rem;">kg</span></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Height</div>
+          <div style="font-weight:800; color:var(--teal-light); font-size:1.1rem;" id="disp-height">{{ today_log.height_cm|default:"--" }} <span style="font-size:0.7rem;">cm</span></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Body Fat</div>
+          <div style="font-weight:800; color:var(--teal-light); font-size:1.1rem;" id="disp-fat">{{ today_log.body_fat_pct|default:"--" }} <span style="font-size:0.7rem;">%</span></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Waist</div>
+          <div style="font-weight:800; color:var(--teal-light); font-size:1.1rem;" id="disp-waist">{{ today_log.waist_cm|default:"--" }} <span style="font-size:0.7rem;">cm</span></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Chest</div>
+          <div style="font-weight:800; color:var(--teal-light); font-size:1.1rem;" id="disp-chest">{{ today_log.chest_cm|default:"--" }} <span style="font-size:0.7rem;">cm</span></div>
+        </div>
+      </div>
+      
+      <p style="margin-top:16px; font-size:0.85rem; color:var(--text-muted); text-align:center;">Keep tracking your consistency to see results!</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if 'progress' in allowed_tabs %}
+<!-- ─────────── MY PROGRESS DASHBOARD ─────────── -->
+<div class="portal-section" id="sec-progress">
+    <!-- Smart Insights Banners -->
+    <div id="prog-insights-container" style="margin-bottom:24px; display:flex; flex-direction:column; gap:12px;">
+        {% for ins in stats.insights %}
+        <div style="background:{% if ins.type == 'streak' %}rgba(16, 185, 129, 0.1){% elif ins.type == 'plateau' %}rgba(239, 68, 68, 0.1){% else %}rgba(245, 158, 11, 0.1){% endif %}; 
+                    color:{% if ins.type == 'streak' %}#10b981{% elif ins.type == 'plateau' %}#ef4444{% else %}#f59e0b{% endif %}; 
+                    border:1px solid currentColor; padding:12px 20px; border-radius:12px; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:12px;">
+            <span>{% if ins.type == 'streak' %}🔥{% elif ins.type == 'plateau' %}⚠️{% else %}💡{% endif %}</span>
+            {{ ins.text }}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid-4" style="gap:20px; margin-bottom:24px;">
+        <div class="card" style="text-align:center; background:linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal);">
+            <div style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Current BMI</div>
+            <div style="font-size:2rem; font-weight:800; color:var(--teal-light);">{{ stats.advanced_metrics.current_bmi|default:"--" }}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Initial: {{ stats.advanced_metrics.initial_bmi|default:"--" }}</div>
+        </div>
+        <div class="card" style="text-align:center; background:linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal);">
+            <div style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Weight Change</div>
+            <div style="font-size:2rem; font-weight:800; color:{% if stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta < 0 %}#10b981{% elif stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta > 0 %}#f43f5e{% else %}var(--text-primary){% endif %};">
+                {% if stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.weight_delta|default:"0" }}kg
+            </div>
+            {% if stats.target_weight_kg %}
+            <div style="margin-top:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:8px; text-align:left;">
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:4px;">
+                    <span style="color:var(--text-muted);">Goal Progress</span>
+                    <strong id="dashboard-goal-percent">0%</strong>
+                </div>
+                <div class="macro-bar" style="height:6px; margin-top:0;">
+                    <div id="dashboard-goal-fill" class="macro-fill" style="width:0%; background:var(--gold);"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="card" style="text-align:center; background:linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal);">
+            <div style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Waist Change</div>
+            <div style="font-size:1.8rem; font-weight:800; color:{% if stats.advanced_metrics.waist_delta and stats.advanced_metrics.waist_delta < 0 %}#10b981{% else %}var(--text-primary){% endif %};">
+                {% if stats.advanced_metrics.waist_delta and stats.advanced_metrics.waist_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.waist_delta|default:"0" }}cm
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Initial: {{ stats.advanced_metrics.initial_waist|default:"--" }}cm</div>
+        </div>
+        <div class="card" style="text-align:center; background:linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal);">
+            <div style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Chest Change</div>
+            <div style="font-size:1.8rem; font-weight:800; color:{% if stats.advanced_metrics.chest_delta and stats.advanced_metrics.chest_delta > 0 %}#10b981{% else %}var(--text-primary){% endif %};">
+                {% if stats.advanced_metrics.chest_delta and stats.advanced_metrics.chest_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.chest_delta|default:"0" }}cm
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Initial: {{ stats.advanced_metrics.initial_chest|default:"--" }}cm</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2" style="gap:24px; margin-bottom:24px;">
+        <div class="card">
+            <div class="section-header"><span class="section-title">📉 Weight Trend (30 Days)</span></div>
+            <div style="height:300px;"><canvas id="memberWeightChart"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="section-header"><span class="section-title">🍽️ Macro History (30 Days)</span></div>
+            <div style="height:300px;"><canvas id="memberMacroChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Consistency Charts -->
+    <div class="grid-2" style="gap:24px; margin-bottom:24px;">
+        <div class="card" style="display:flex; flex-direction:column; align-items:center;">
+          <div class="section-header" style="width:100%"><span class="section-title">💪 Workout Consistency</span></div>
+          <div style="height:200px; width:200px; position:relative;">
+              <canvas id="memberWorkoutConsistencyChart"></canvas>
+              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.8rem; color:var(--text-primary);">{{ stats.consistency.workout }}%</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex; flex-direction:column; align-items:center;">
+          <div class="section-header" style="width:100%"><span class="section-title">🥗 Diet Consistency</span></div>
+          <div style="height:200px; width:200px; position:relative;">
+              <canvas id="memberDietConsistencyChart"></canvas>
+              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.8rem; color:var(--text-primary);">{{ stats.consistency.diet }}%</div>
+          </div>
+        </div>
+    </div>
+
+    <!-- Raw Matrix -->
+    <div class="card">
+        <div class="section-header" style="justify-content:space-between;">
+          <span class="section-title">📋 Raw Log Matrix</span>
+          <div style="display:flex; gap:10px; align-items:center;">
+             <input type="date" id="member-matrix-filter" class="form-control" style="max-width:200px;" onchange="filterMemberMatrix()">
+             <button class="btn btn-outline btn-sm" onclick="document.getElementById('member-matrix-filter').value=''; filterMemberMatrix()">Clear</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table style="width:100%;">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Weight (kg)</th>
+                <th>Chest (cm)</th>
+                <th>Waist (cm)</th>
+                <th>Workout</th>
+                <th>Diet</th>
+                <th>Calories</th>
+                <th>Macros (P/C/F)</th>
+              </tr>
+            </thead>
+            <tbody id="member-matrix-body">
+                {% for log in stats.raw_logs %}
+                <tr data-date="{{ log.date|date:'Y-m-d' }}">
+                    <td>{{ log.date|date:"M d, Y" }}</td>
+                    <td style="font-weight:700; color:var(--teal-light);">{{ log.weight_kg|default:"--" }}</td>
+                    <td>{{ log.chest_cm|default:"--" }}</td>
+                    <td>{{ log.waist_cm|default:"--" }}</td>
+                    <td style="text-align:center;">{% if log.workout_status %}<span style="color:#10b981;">✅</span>{% else %}<span style="color:#ef4444;">❌</span>{% endif %}</td>
+                    <td style="text-align:center;">{% if log.diet_status %}<span style="color:#10b981;">✅</span>{% else %}<span style="color:#ef4444;">❌</span>{% endif %}</td>
+                    <td style="color:var(--gold);">
+                        {% for m in stats.macro_history %}{% if m.date == log.date %}{{ m.total_cals|floatformat:0 }}{% endif %}{% endfor %}
+                    </td>
+                    <td style="font-size:0.75rem; color:var(--text-muted);">
+                        {% for m in stats.macro_history %}{% if m.date == log.date %}
+                            P: {{ m.total_protein|floatformat:0 }}g | C: {{ m.total_carbs|floatformat:0 }}g | F: {{ m.total_fat|floatformat:0 }}g
+                        {% endif %}{% endfor %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No logs available yet. Keep tracking!</td></tr>
+                {% endfor %}
+            </tbody>
+          </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ─────────── BOOKING ─────────── -->
+<div class="portal-section" id="sec-booking">
+  <div class="card" style="margin-bottom:20px;">
+    <p style="color:var(--text-secondary);margin-bottom:16px;">Click an available slot to book a session with our expert instructors. Green = already booked, Red = full.</p>
+    <div id="booking-calendar" style="min-height:500px;"></div>
+  </div>
+  {% if upcoming_bookings %}
+  <div class="card">
+    <div class="section-header"><span class="section-title">My Booked Sessions</span></div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Session</th><th>Date & Time</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for b in upcoming_bookings %}
+          <tr>
+            <td>{{ b.slot.title|default:"Training" }}{% if b.slot.instructor %} with {{ b.slot.instructor.get_full_name|default:b.slot.instructor.email }}{% endif %}</td>
+            <td>{{ b.slot.date|date:"M d, Y" }} · {{ b.slot.start_time|time:"H:i" }}</td>
+            <td><span class="badge badge-teal">{{ b.status|capfirst }}</span></td>
+            <td><button class="btn btn-danger btn-sm" onclick="cancelBooking({{ b.id }})">Cancel</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if 'diet' in allowed_tabs %}
+<!-- ─────────── DIET PLAN ─────────── -->
+<div class="portal-section" id="sec-diet">
+  {% if diet_plan %}
+    <div class="card" style="margin-bottom:20px;">
+      <div class="section-header">
+        <div><span class="section-title">{{ diet_plan.title }}</span></div>
+      </div>
+    {% if diet_plan.notes %}<p style="color:var(--text-secondary);margin-bottom:20px;">{{ diet_plan.notes }}</p>{% endif %}
+    <div class="tab-pills" style="margin-bottom:20px;">
+      <button class="diet-day-tab active" data-day="all" onclick="filterDietDay('all',this)">All Days</button>
+      <button class="diet-day-tab" data-day="monday" onclick="filterDietDay('monday',this)">Mon</button>
+      <button class="diet-day-tab" data-day="tuesday" onclick="filterDietDay('tuesday',this)">Tue</button>
+      <button class="diet-day-tab" data-day="wednesday" onclick="filterDietDay('wednesday',this)">Wed</button>
+      <button class="diet-day-tab" data-day="thursday" onclick="filterDietDay('thursday',this)">Thu</button>
+      <button class="diet-day-tab" data-day="friday" onclick="filterDietDay('friday',this)">Fri</button>
+      <button class="diet-day-tab" data-day="saturday" onclick="filterDietDay('saturday',this)">Sat</button>
+      <button class="diet-day-tab" data-day="sunday" onclick="filterDietDay('sunday',this)">Sun</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;" id="meals-grid">
+      {% for meal in diet_plan.meals.all %}
+      <div class="exercise-card meal-card" data-day="{{ meal.day }}">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <input type="checkbox" class="task-check" data-type="meal" data-id="{{ meal.id }}" data-day="{{ meal.day }}" onchange="toggleTask(this)" {% if meal.id in meal_completion_ids %}checked{% endif %} style="width:20px; height:20px; accent-color:var(--teal); cursor:pointer;">
+              <div>
+                <div style="font-weight:700;">{{ meal.name }}</div>
+                <div style="font-size:.75rem; color:var(--teal-light); text-transform:capitalize;">{{ meal.get_meal_type_display }} · {{ meal.day|default:"—" }}</div>
+              </div>
+            </div>
+          </div>
+          {% if meal.image_url %}
+          <div style="margin:12px -16px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:hidden;">
+            <img src="{{ meal.image_url }}" style="width:100%; height:180px; object-fit:cover;" onerror="this.src='https://via.placeholder.com/400x200?text=Meal+Image'">
+          </div>
+          {% endif %}
+          {% if meal.description %}<p style="color:var(--text-muted); font-size:.82rem; margin-bottom:10px;">{{ meal.description }}</p>{% endif %}
+          
+          {% if meal.video_url %}
+          <div style="margin-top:10px;">
+            {% if meal.is_youtube %}
+            <iframe src="{{ meal.youtube_embed_url }}" style="width:100%;height:180px;border-radius:8px;border:none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            {% else %}
+            <video src="{{ meal.video_url }}" controls style="width:100%;border-radius:8px;max-height:180px;"></video>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          {% if meal.calories %}
+          <div style="display:flex;gap:12px;font-size:0.75rem;color:var(--text-muted); margin-top:12px; padding-top:8px; border-top:1px solid var(--border);">
+              <span>⚡ {{ meal.calories }}k</span>
+              <span>🥩 {{ meal.protein_g|default:0 }}g</span>
+              <span>🍞 {{ meal.carbs_g|default:0 }}g</span>
+          </div>
+          {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center;padding:60px;"><span style="font-size:3rem;">🥗</span><h3 style="margin:16px 0 8px;">No Diet Plan Yet</h3><p style="color:var(--text-muted);">Your trainer will assign a personalized diet plan soon.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if 'workout' in allowed_tabs %}
+<!-- ─────────── WORKOUT PLAN ─────────── -->
+<div class="portal-section" id="sec-workout">
+  {% if workout_plan %}
+  <div class="card">
+    <div class="section-header" style="justify-content:space-between; align-items:flex-start;">
+      <div>
+        <span class="section-title">{{ workout_plan.title }}</span>
+      </div>
+    </div>
+    {% if workout_plan.notes %}<p style="color:var(--text-secondary);margin-bottom:20px;">{{ workout_plan.notes }}</p>{% endif %}
+    <div class="tab-pills" style="margin-bottom:20px;">
+      <button class="workout-day-tab active" data-day="all" onclick="filterDay('all',this)">All Days</button>
+      <button class="workout-day-tab" data-day="monday" onclick="filterDay('monday',this)">Mon</button>
+      <button class="workout-day-tab" data-day="tuesday" onclick="filterDay('tuesday',this)">Tue</button>
+      <button class="workout-day-tab" data-day="wednesday" onclick="filterDay('wednesday',this)">Wed</button>
+      <button class="workout-day-tab" data-day="thursday" onclick="filterDay('thursday',this)">Thu</button>
+      <button class="workout-day-tab" data-day="friday" onclick="filterDay('friday',this)">Fri</button>
+      <button class="workout-day-tab" data-day="saturday" onclick="filterDay('saturday',this)">Sat</button>
+      <button class="workout-day-tab" data-day="sunday" onclick="filterDay('sunday',this)">Sun</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;" id="exercises-grid">
+      {% for ex in workout_plan.exercises.all %}
+      <div class="exercise-card" data-day="{{ ex.day }}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <input type="checkbox" class="task-check" data-type="exercise" data-id="{{ ex.id }}" data-day="{{ ex.day }}" onchange="toggleTask(this)" {% if ex.id in exercise_completion_ids %}checked{% endif %} style="width:20px;height:20px;accent-color:var(--teal);cursor:pointer;" title="Mark as completed today">
+            <div>
+              <div style="font-weight:700;">{{ ex.name }}</div>
+              <div style="font-size:.75rem;color:var(--teal-light);text-transform:capitalize;">{{ ex.day|default:"—" }}</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:.8rem;color:var(--text-muted);">{% if ex.sets %}{{ ex.sets }} sets{% endif %}{% if ex.reps %} × {{ ex.reps }}{% endif %}{% if ex.rest_seconds %} · {{ ex.rest_seconds }}s rest{% endif %}</div>
+        </div>
+        {% if ex.notes %}<p style="color:var(--text-muted);font-size:.82rem;margin-bottom:10px;">{{ ex.notes }}</p>{% endif %}
+        {% if ex.video_url %}
+        <div style="margin-top:12px; border-radius:10px; overflow:hidden;">
+          {% if ex.is_youtube %}
+          <iframe src="{{ ex.youtube_embed_url }}" style="width:100%;height:200px;border:none;display:block;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          {% else %}
+          <video src="{{ ex.video_url }}" controls style="width:100%;max-height:200px;display:block;"></video>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p style="color:var(--text-muted);">No exercises added yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center;padding:60px;"><span style="font-size:3rem;">💪</span><h3 style="margin:16px 0 8px;">No Workout Plan Yet</h3><p style="color:var(--text-muted);">Your trainer will assign a personalized workout plan soon.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if 'global_workout' in allowed_tabs %}
+<!-- ─────────── GLOBAL WORKOUTS ─────────── -->
+<div class="portal-section" id="sec-global-workout">
+  <div class="card">
+    <div class="section-header">
+      <span class="section-title">🌍 Workout Library</span>
+      <div id="gw-tabs" class="tab-pills">
+          <button class="workout-day-tab active" onclick="filterGlobal('all',this)">All</button>
+          {% regroup global_workouts by category as cat_list %}
+          {% for cat in cat_list %}
+            {% if cat.grouper %}
+            <button class="workout-day-tab" onclick="filterGlobal('{{ cat.grouper }}',this)">{{ cat.grouper|title }}</button>
+            {% endif %}
+          {% endfor %}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;" id="gw-grid">
+      {% for gw in global_workouts %}
+      <div class="card gw-card" data-cat="{{ gw.category }}" style="padding:0;overflow:hidden;border:1px solid var(--border);">
+        {% if gw.video_url %}
+        <div style="width:100%;height:180px;background:#000;position:relative;cursor:pointer;" onclick="window.open('{{ gw.video_url }}','_blank')">
+           <img src="{{ gw.get_thumbnail_url }}" style="width:100%;height:100%;object-fit:cover;opacity:0.8;" onerror="this.src='https://via.placeholder.com/640x360?text=Video+Preview'">
+           <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:3rem;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,0.5);">▶</div>
+        </div>
+        {% endif %}
+        <div style="padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+            <span class="badge badge-teal" style="font-size:0.7rem;">{{ gw.category|title }}</span>
+          </div>
+          <div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">{{ gw.title }}</div>
+          <p style="color:var(--text-muted);font-size:0.85rem;">{{ gw.description }}</p>
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:var(--text-muted);text-align:center;padding:40px;width:100%;">No library workouts available yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if 'bmi' in allowed_tabs %}
+<!-- ─────────── BMI ─────────── -->
+<div class="portal-section" id="sec-bmi">
+  <div class="card" style="max-width:480px;margin:0 auto;">
+    <div class="bmi-widget">
+      <h3 style="margin-bottom:20px;">⚖️ BMI Calculator</h3>
+      <div class="form-group"><label class="form-label">Height (cm)</label><input type="number" id="bmi-height" class="form-control" placeholder="e.g. 170" oninput="updateBMI()"></div>
+      <div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" id="bmi-weight" class="form-control" placeholder="e.g. 70" oninput="updateBMI()"></div>
+      <div id="bmi-result" style="display:none;margin-top:20px;text-align:center;">
+        <div style="font-size:3rem;font-weight:900;color:var(--teal-light);" id="bmi-val">—</div>
+        <div style="font-size:1.1rem;font-weight:600;margin:8px 0;" id="bmi-label">—</div>
+        <div style="height:12px;border-radius:6px;background:linear-gradient(90deg,#3b82f6,#22c55e,#f59e0b,#ef4444);position:relative;margin:16px 0;">
+          <div id="bmi-marker" style="position:absolute;top:-4px;width:4px;height:20px;background:#fff;border-radius:2px;transition:left .5s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-muted);"><span>Underweight<br>&lt;18.5</span><span>Normal<br>18.5–25</span><span>Overweight<br>25–30</span><span>Obese<br>&gt;30</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if 'nutrient' in allowed_tabs %}
+<!-- ─────────── NUTRIENT CALCULATOR ─────────── -->
+<div class="portal-section" id="sec-nutrient">
+  <div class="card" style="max-width:600px;margin:0 auto;">
+    <div class="bmi-widget" style="background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(13,148,136,.05));border-color:var(--teal);">
+      <h3 style="margin-bottom:20px;">🍎 Nutrient Calculator <span style="font-size:0.8rem;color:var(--text-muted);font-weight:normal;">(Powered by CalorieNinjas)</span></h3>
+      <div class="form-group">
+        <label class="form-label">What did you eat?</label>
+        <textarea id="nutri-query" class="form-control" rows="3" placeholder="e.g. 3lb carrots and a chicken sandwich"></textarea>
+      </div>
+      <button class="btn btn-primary w-full" onclick="calculateNutrients()" id="nutri-btn" style="justify-content:center;">Extract Nutrients</button>
+      
+      <div id="nutri-result" style="display:none;margin-top:24px;border-top:1px solid var(--border);padding-top:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h4 style="color:var(--teal-light);margin:0;">Total Nutritional Breakdown</h4>
+            <span class="badge badge-gold" id="nutri-item-count">0 items</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px;" id="nutri-totals-grid">
+           <!-- Dynamic totals will appear here -->
+        </div>
+
+        <div id="nutri-items-list" style="display:grid;gap:8px;">
+            <!-- Individual items will appear here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if 'payments' in allowed_tabs %}
+<!-- ─────────── PAYMENTS ─────────── -->
+<div class="portal-section" id="sec-payments">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-header"><span class="section-title">💳 Payment History</span></div>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Ref</th></tr></thead>
+        <tbody>
+          {% for tx in recent_transactions %}
+          <tr>
+            <td>{{ tx.created_at|date:"M d, Y" }}</td>
+            <td>{{ tx.plan.name|default:"—" }}</td>
+            <td><strong>NPR {{ tx.amount }}</strong></td>
+            <td><span class="badge {% if tx.status == 'success' %}badge-green{% elif tx.status == 'failed' %}badge-red{% else %}badge-gold{% endif %}">{{ tx.status|capfirst }}</span></td>
+            <td style="font-family:monospace;font-size:.8rem;">{{ tx.esewa_ref_id|default:"—"|truncatechars:16 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No transactions yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if plans %}
+    <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border);">
+      <div style="font-weight:700;margin-bottom:16px;">Renew / Upgrade Membership</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        {% for plan in plans %}
+        <a href="/payments/pay/{{ plan.id }}/" class="btn btn-gold btn-sm">⚡ {{ plan.name }} — NPR {{ plan.price }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+
+{% if 'profile' in allowed_tabs %}
+<!-- ─────────── MY PROFILE ─────────── -->
+<div class="portal-section" id="sec-profile">
+  <div class="grid-2">
+     <div class="card">
+        <div class="section-header"><span class="section-title">👤 Public Profile</span></div>
+        <div style="text-align:center;margin-bottom:20px;">
+           <img src="{{ profile.get_profile_image }}" id="profile-img-preview" style="width:120px;height:120px;border-radius:50%;border:4px solid var(--teal);object-fit:cover;">
+           <div id="profile-pic-picker" style="margin-top:12px;"></div>
+           <input type="hidden" id="profile-image-url" value="{{ profile.profile_image_url }}">
+        </div>
+        <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-control" value="{{ user.get_full_name }}" readonly style="opacity:0.7;"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-control" value="{{ user.email }}" readonly style="opacity:0.7;"></div>
+     </div>
+     <div class="card">
+        <div class="section-header"><span class="section-title">⚙️ Profile Settings</span></div>
+        <div class="form-group"><label class="form-label">Phone Number</label><input type="text" id="prof-phone" class="form-control" value="{{ profile.phone }}"></div>
+        <div class="form-group"><label class="form-label">Address</label><textarea id="prof-address" class="form-control" rows="2">{{ profile.address }}</textarea></div>
+        <div class="form-group"><label class="form-label">Bio (Optional)</label><textarea id="prof-bio" class="form-control" rows="3">{{ profile.bio }}</textarea></div>
+        <div class="form-group"><label class="form-label">Target Goal Weight (kg)</label><input type="number" step="0.1" id="prof-target-weight" class="form-control" value="{{ profile.target_weight_kg|default_if_none:'' }}"></div>
+        <button class="btn btn-primary w-full" onclick="updateMyProfile()">Save Changes</button>
+     </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ─────────── INSTRUCTOR DETAIL MODAL ─────────── -->
+<div id="instructor-detail-modal" class="modal-overlay" style="display:none; justify-content:center; align-items:center;">
+    <div class="card" style="width:100%; max-width:450px; padding:24px; position:relative; background:var(--bg-dark);">
+        <button style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.2rem;" onclick="document.getElementById('instructor-detail-modal').style.display='none'">✕</button>
+        <div style="text-align:center; margin-bottom:20px;">
+            <img id="staff-detail-img" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--teal);">
+            <h3 id="staff-detail-name" style="margin-top:16px; color:var(--text-primary);"></h3>
+            <div id="staff-detail-spec" style="color:var(--teal-light); font-weight:600; font-size:0.85rem;"></div>
+        </div>
+        <div style="display:grid; gap:12px; font-size:0.85rem;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                <span style="color:var(--text-muted);">📧 Email</span>
+                <span id="staff-detail-email" style="color:var(--text-primary);"></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                <span style="color:var(--text-muted);">📞 Number</span>
+                <span id="staff-detail-phone" style="color:var(--text-primary);"></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                <span style="color:var(--text-muted);">🏢 Office Address</span>
+                <span id="staff-detail-address" style="color:var(--text-primary);"></span>
+            </div>
+        </div>
+        <div style="margin-top:20px;">
+            <div style="font-weight:600; margin-bottom:6px; color:var(--text-primary);">📖 Public Bio</div>
+            <p id="staff-detail-bio" style="color:var(--text-secondary); font-size:0.8rem; line-height:1.4;"></p>
+        </div>
+        <button class="btn btn-primary w-full" style="margin-top:24px;" onclick="document.getElementById('instructor-detail-modal').style.display='none'">Close View</button>
+    </div>
+</div>
+
+<!-- ─────────── VIDEO PLAYER MODAL ─────────── -->
+<div id="video-modal" class="modal-overlay" style="display:none; justify-content:center; align-items:center; z-index:999;" onclick="if(event.target===this) closeVideoModal()">
+  <div style="width:100%; max-width:700px; background:var(--bg-dark); border-radius:16px; padding:20px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.8);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 id="video-modal-title" style="margin:0; color:var(--text-primary); font-size:1rem;"></h3>
+      <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.3rem;" onclick="closeVideoModal()">✕</button>
+    </div>
+    <div id="video-modal-body" style="border-radius:10px; overflow:hidden; background:#000;"></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// ── Booking Calendar ──
+document.addEventListener('DOMContentLoaded', () => {
+  const calEl = document.getElementById('booking-calendar');
+  if (calEl) {
+    const cal = new FullCalendar.Calendar(calEl, {
+      initialView: 'dayGridMonth',
+      headerToolbar: { left:'prev,next today', center:'title', right:'dayGridMonth,timeGridWeek' },
+      themeSystem: 'standard',
+      height: 'auto',
+      events: '/portal/member/slots/',
+      eventClick(info) {
+        const props = info.event.extendedProps;
+        if (props.is_booked) { showToast('You already booked this slot.','info'); return; }
+        if (props.is_full) { showToast('This slot is full.','error'); return; }
+        if (confirm(`Book "${info.event.title}"? Spots left: ${props.spots_left}`)) {
+          apiPost(`/portal/member/book/${info.event.id}/`, {}).then(d => {
+            showToast(d.message, d.message.includes('success')||d.message.includes('booked') ? 'success':'error');
+            cal.refetchEvents();
+          });
+        }
+      }
+    });
+    cal.render();
+  }
+
+
+  // Profile picture init
+  initMediaInput({
+    containerId: 'profile-pic-picker',
+    urlFieldId: 'profile-image-url',
+    cloudName: CLOUDINARY_CLOUD,
+    uploadPreset: CLOUDINARY_PRESET,
+    type: 'image',
+    callback: (url) => { document.getElementById('profile-img-preview').src = url; }
+  });
+});
+
+function cancelBooking(id) {
+  if (!confirm('Cancel this booking?')) return;
+  apiPost(`/portal/member/cancel/${id}/`,{}).then(d=>{
+    showToast(d.message,'info'); location.reload();
+  });
+}
+
+function logProgress() {
+  const data = {
+    weight_kg: document.getElementById('p-weight').value,
+    height_cm: document.getElementById('p-height').value,
+    body_fat_pct: document.getElementById('p-fat').value,
+    waist_cm: document.getElementById('p-waist').value,
+    chest_cm: document.getElementById('p-chest').value,
+    notes: document.getElementById('p-notes').value,
+    date: document.getElementById('p-date').value
+  };
+  apiPost('/portal/member/log-progress/', data).then(d=>{
+    showToast(d.message,'success');
+    
+    // Only update "Today's Achievement" cards if the logged date is today
+    const selectedDate = document.getElementById('p-date').value;
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    if (selectedDate === todayStr) {
+        if(document.getElementById('disp-weight')) document.getElementById('disp-weight').innerHTML = `${data.weight_kg || '--'} <span style="font-size:0.7rem;">kg</span>`;
+        if(document.getElementById('disp-height')) document.getElementById('disp-height').innerHTML = `${data.height_cm || '--'} <span style="font-size:0.7rem;">cm</span>`;
+        if(document.getElementById('disp-fat')) document.getElementById('disp-fat').innerHTML = `${data.body_fat_pct || '--'} <span style="font-size:0.7rem;">%</span>`;
+        if(document.getElementById('disp-waist')) document.getElementById('disp-waist').innerHTML = `${data.waist_cm || '--'} <span style="font-size:0.7rem;">cm</span>`;
+        if(document.getElementById('disp-chest')) document.getElementById('disp-chest').innerHTML = `${data.chest_cm || '--'} <span style="font-size:0.7rem;">cm</span>`;
+    }
+    
+    // Refresh Trends/Matrix if we are in progress tab
+    if (typeof initMemberProgressDashboard === 'function') {
+        setTimeout(initMemberProgressDashboard, 500);
+    }
+  });
+}
+
+function updateBMI() {
+  const h = parseFloat(document.getElementById('bmi-height').value);
+  const w = parseFloat(document.getElementById('bmi-weight').value);
+  const result = calcBMI(h, w);
+  if (!result) return;
+  document.getElementById('bmi-result').style.display = 'block';
+  document.getElementById('bmi-val').textContent = result.bmi;
+  document.getElementById('bmi-label').textContent = result.label;
+  const pct = Math.min(Math.max((result.bmi - 10) / 30, 0), 1);
+  document.getElementById('bmi-marker').style.left = (pct * 100) + '%';
+}
+
+function filterDay(day, btn) {
+  document.querySelectorAll('.workout-day-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#exercises-grid .exercise-card').forEach(c=>{
+    c.style.display = (day==='all'||c.dataset.day===day) ? '' : 'none';
+  });
+}
+function filterDietDay(day, btn) {
+  document.querySelectorAll('.diet-day-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#meals-grid .meal-card').forEach(c=>{
+    c.style.display = (day==='all'||c.dataset.day===day) ? '' : 'none';
+  });
+}
+
+function filterGlobal(cat, btn) {
+  document.querySelectorAll('#gw-tabs .workout-day-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#gw-grid .gw-card').forEach(c=>{
+    c.style.display = (cat==='all'||c.dataset.cat===cat) ? '' : 'none';
+  });
+}
+
+function toggleExercise(exerciseId, isCompleted) {
+  apiPost(`/portal/member/exercise/toggle/${exerciseId}/`, {is_completed: isCompleted})
+    .then(d => {
+       if(d.error) showToast(d.error, 'error');
+    });
+}
+
+function updateMyProfile() {
+  const data = {
+    phone: document.getElementById('prof-phone').value,
+    address: document.getElementById('prof-address').value,
+    bio: document.getElementById('prof-bio').value,
+    profile_image_url: document.getElementById('profile-image-url').value,
+    target_weight_kg: document.getElementById('prof-target-weight').value
+  };
+  apiPost('/api/update-profile/', data).then(d => {
+    showToast(d.message, 'success');
+    if (d.message.indexOf('success') !== -1) setTimeout(() => location.reload(), 1500);
+  });
+}
+
+// --- Daily Task Tracking ---
+function getDateByDayName(dayName) {
+    // If no dayName, default to today's local date
+    if (!dayName || dayName === 'today') return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const targetIdx = days.indexOf(dayName.toLowerCase());
+    if (targetIdx === -1) return new Date().toLocaleDateString('en-CA');
+    
+    const today = new Date();
+    const todayIdx = today.getDay(); // 0 is Sunday
+    const diff = targetIdx - todayIdx;
+    const targetDate = new Date();
+    targetDate.setDate(today.getDate() + diff);
+    return targetDate.toLocaleDateString('en-CA');
+}
+
+function toggleTask(el) {
+    const id = el.dataset.id;
+    const type = el.dataset.type;
+    const day = el.dataset.day; // e.g. 'monday'
+    const isCompleted = el.checked;
+    const logDate = getDateByDayName(day);
+    const url = type === 'meal' ? `/portal/member/meal/toggle/${id}/` : `/portal/member/exercise/toggle/${id}/`;
+    
+    // Optimistic UI: Update all checkboxes for the same ID (useful if task appears in both dashboard and detail)
+    document.querySelectorAll(`.task-check[data-id="${id}"][data-type="${type}"]`).forEach(cb => cb.checked = isCompleted);
+    
+    apiPost(url, { is_completed: isCompleted, date: logDate }).then(d => {
+        if (d.error) {
+            showToast(d.error, 'error');
+            document.querySelectorAll(`.task-check[data-id="${id}"][data-type="${type}"]`).forEach(cb => cb.checked = !isCompleted);
+        } else {
+            updateOverallProgress();
+            // Refresh dashboard if active to see new snapshots in trends
+            if (typeof initMemberProgressDashboard === 'function') {
+                setTimeout(initMemberProgressDashboard, 1000);
+            }
+        }
+    }).catch(err => {
+        document.querySelectorAll(`.task-check[data-id="${id}"][data-type="${type}"]`).forEach(cb => cb.checked = !isCompleted);
+        showToast('Failed to update status', 'error');
+    });
+}
+
+function updateOverallProgress() {
+    // Look in checklist section first, then fallback to dashboard if needed
+    const container = document.getElementById('sec-checklist') || document.getElementById('sec-dashboard');
+    if (!container) return;
+
+    const total = container.querySelectorAll('.task-check').length;
+    const completed = container.querySelectorAll('.task-check:checked').length;
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    const fill = document.getElementById('overall-progress-fill');
+    const text = document.getElementById('overall-progress-text');
+    if(fill) fill.style.width = percent + '%';
+    if(text) text.textContent = percent + '%';
+
+    // Update sub-counts (also scoped to container)
+    const mealTotal = container.querySelectorAll('.task-check[data-type="meal"]').length;
+    const mealDone = container.querySelectorAll('.task-check[data-type="meal"]:checked').length;
+    const dietCount = document.getElementById('diet-count');
+    if(dietCount) dietCount.textContent = `${mealDone}/${mealTotal}`;
+
+    const exTotal = container.querySelectorAll('.task-check[data-type="exercise"]').length;
+    const exDone = container.querySelectorAll('.task-check[data-type="exercise"]:checked').length;
+    const workoutCount = document.getElementById('workout-count');
+    if(workoutCount) workoutCount.textContent = `${exDone}/${exTotal}`;
+
+    // Update Speedometer Gauges in Progress Tab
+    const dietPercent = mealTotal > 0 ? Math.round((mealDone / mealTotal) * 100) : 0;
+    const workoutPercent = exTotal > 0 ? Math.round((exDone / exTotal) * 100) : 0;
+
+    const dietGauge = document.getElementById('gauge-diet-fill');
+    const dietVal = document.getElementById('gauge-diet-val');
+    if(dietGauge) dietGauge.style.strokeDashoffset = 125.6 * (1 - dietPercent / 100);
+    if(dietVal) dietVal.textContent = dietPercent + '%';
+
+    const workoutGauge = document.getElementById('gauge-workout-fill');
+    const workoutVal = document.getElementById('gauge-workout-val');
+    if(workoutGauge) workoutGauge.style.strokeDashoffset = 125.6 * (1 - workoutPercent / 100);
+    if(workoutVal) workoutVal.textContent = workoutPercent + '%';
+}
+
+document.addEventListener('DOMContentLoaded', updateOverallProgress);
+
+function viewExercise(id) {
+    const el = document.querySelector(`.exercise-card .task-check[data-id="${id}"]`);
+    if(el) {
+        document.querySelector('[data-section="sec-workout"]').click();
+        setTimeout(() => {
+            el.closest('.exercise-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.closest('.exercise-card').style.boxShadow = '0 0 15px var(--teal)';
+            setTimeout(() => el.closest('.exercise-card').style.boxShadow = '', 2000);
+        }, 100);
+    }
+}
+
+function openVideoModal(videoUrl, title) {
+    const modal = document.getElementById('video-modal');
+    const body = document.getElementById('video-modal-body');
+    document.getElementById('video-modal-title').textContent = title || 'Video';
+    // Detect YouTube
+    const ytMatch = videoUrl.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([^&?#/ ]+)/);
+    if (ytMatch) {
+        body.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1" style="width:100%;height:380px;border:none;" allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    } else {
+        body.innerHTML = `<video src="${videoUrl}" controls autoplay style="width:100%;max-height:380px;">Your browser does not support the video tag.</video>`;
+    }
+    modal.style.display = 'flex';
+}
+
+function closeVideoModal() {
+    const modal = document.getElementById('video-modal');
+    modal.style.display = 'none';
+    document.getElementById('video-modal-body').innerHTML = ''; // Stop video
+}
+
+
+function filterGlobal(cat, btn) {
+  document.querySelectorAll('.workout-day-tab, .tab-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#gw-grid .gw-card').forEach(c => {
+    c.style.display = (cat === 'all' || c.dataset.cat === cat) ? '' : 'none';
+  });
+}
+function handleStaffClick(el) {
+  showStaffDetail(
+    el.dataset.name,
+    el.dataset.email,
+    el.dataset.spec,
+    el.dataset.phone,
+    el.dataset.address,
+    el.dataset.bio,
+    el.dataset.img
+  );
+}
+function calcBMI(h, w) {
+  if (!h || !w) return null;
+  const bmi = (w / ((h / 100) * (h / 100))).toFixed(1);
+  let label = 'Normal';
+  if (bmi < 18.5) label = 'Underweight';
+  else if (bmi >= 25 && bmi < 30) label = 'Overweight';
+  else if (bmi >= 30) label = 'Obese';
+  return { bmi, label };
+}
+
+function cancelBooking(id) {
+  if (confirm('Cancel this booking?')) {
+    apiPost(`/portal/member/cancel/${id}/`, {}).then(d => {
+      showToast(d.message, 'info');
+      if (d.message.includes('success')) setTimeout(() => location.reload(), 800);
+    });
+  }
+}
+
+function showStaffDetail(name, email, spec, phone, address, bio, img) {
+  document.getElementById('staff-detail-name').textContent = name;
+  document.getElementById('staff-detail-email').textContent = email;
+  document.getElementById('staff-detail-spec').textContent = spec;
+  document.getElementById('staff-detail-phone').textContent = phone;
+  document.getElementById('staff-detail-address').textContent = address;
+  document.getElementById('staff-detail-bio').textContent = bio;
+  document.getElementById('staff-detail-img').src = img;
+  const modal = document.getElementById('instructor-detail-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+// ── CalorieNinjas API (Improved) ──
+const CALORIE_NINJAS_API_KEY = '{{ CALORIE_NINJAS_API_KEY }}'; // Loaded from .env via context processor
+const CALORIE_NINJAS_API_URL = '{{ CALORIE_NINJAS_API_URL }}'; // Loaded from .env via context processor
+
+function calculateNutrients() {
+  const query = document.getElementById('nutri-query').value.trim();
+  if (!query) { showToast('Please enter what you ate.','error'); return; }
+  
+  const btn = document.getElementById('nutri-btn');
+  btn.textContent = 'Analyzing...';
+  btn.disabled = true;
+  document.getElementById('nutri-result').style.display = 'none';
+
+  const url = `/portal/member/nutrient-proxy/?query=${encodeURIComponent(query)}`;
+  
+  fetch(url)
+    .then(async res => {
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error('API Error Response:', errText);
+            throw new Error(`HTTP Error: ${res.status} - ${errText}`);
+        }
+        return res.json();
+    })
+    .then(data => {
+        console.log('API Response Data:', data);
+      btn.textContent = 'Extract Nutrients';
+      btn.disabled = false;
+      
+      const items = Array.isArray(data) ? data : (data.items || []);
+      if (items.length === 0) {
+        showToast('Could not find any food items in that query.', 'error');
+        return;
+      }
+      
+      let totals = {
+          serving: 0, fat: 0, fat_sat: 0, sodium: 0, potassium: 0, 
+          chol: 0, carbs: 0, fiber: 0, sugar: 0
+      };
+      const listEl = document.getElementById('nutri-items-list');
+      listEl.innerHTML = '';
+
+      items.forEach(item => {
+        const srv = parseFloat(item.serving_size_g) || 0;
+        const fat = parseFloat(item.fat_total_g) || 0;
+        const fat_s = parseFloat(item.fat_saturated_g) || 0;
+        const sod = parseFloat(item.sodium_mg) || 0;
+        const pot = parseFloat(item.potassium_mg) || 0;
+        const cho = parseFloat(item.cholesterol_mg) || 0;
+        const carb = parseFloat(item.carbohydrates_total_g) || 0;
+        const fib = parseFloat(item.fiber_g) || 0;
+        const sug = parseFloat(item.sugar_g) || 0;
+
+        totals.serving += srv;
+        totals.fat += fat;
+        totals.fat_sat += fat_s;
+        totals.sodium += sod;
+        totals.potassium += pot;
+        totals.chol += cho;
+        totals.carbs += carb;
+        totals.fiber += fib;
+        totals.sugar += sug;
+
+        const row = document.createElement('div');
+        row.style.cssText = 'padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:0.8rem;border:1px solid var(--border);margin-bottom:8px;';
+        row.innerHTML = `
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <strong>${item.name.toUpperCase()}</strong>
+                <span class="badge badge-teal">${srv}g serving</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:0.75rem;color:var(--text-muted);">
+                <span>Fat: ${fat}g (Sat: ${fat_s}g)</span>
+                <span>Carbs: ${carb}g (Sugar: ${sug}g)</span>
+                <span>Sodium: ${sod}mg</span>
+                <span>Potassium: ${pot}mg</span>
+                <span>Cholesterol: ${cho}mg</span>
+                <span>Fiber: ${fib}g</span>
+            </div>
+        `;
+        listEl.appendChild(row);
+      });
+
+      const gridEl = document.getElementById('nutri-totals-grid');
+      const createStat = (val, label, unit) => `
+        <div style="background:var(--bg-dark);padding:12px;border-radius:10px;border:1px solid var(--border);text-align:center;">
+            <div style="font-weight:800;font-size:1.2rem;color:var(--teal-light);">${val.toFixed(1)}${unit}</div>
+            <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;">${label}</div>
+        </div>`;
+      
+      gridEl.innerHTML = 
+        createStat(totals.fat, 'Total Fat', 'g') +
+        createStat(totals.carbs, 'Total Carbs', 'g') +
+        createStat(totals.sodium, 'Sodium', 'mg') +
+        createStat(totals.potassium, 'Potassium', 'mg') +
+        createStat(totals.chol, 'Cholesterol', 'mg') +
+        createStat(totals.fiber, 'Fiber', 'g') +
+        createStat(totals.sugar, 'Sugar', 'g');
+
+      document.getElementById('nutri-item-count').textContent = `${items.length} items found`;
+      
+      document.getElementById('nutri-result').style.display = 'block';
+    })
+    .catch(err => {
+      btn.textContent = 'Extract Nutrients';
+      btn.disabled = false;
+      showToast(err.message.includes('HTTP') ? 'Nutrition API error. Please check your key.' : 'Could not connect to nutrition database.', 'error');
+    });
+}
+  // Member Dashboard Charts Initialization
+  let memberWeightChart = null;
+  let memberMacroChart = null;
+  let memberWorkoutPie = null;
+  let memberDietPie = null;
+
+  function initMemberProgressDashboard() {
+    const rawProgress = [
+      {% for log in stats.raw_logs %}
+      { date: "{{ log.date|date:'Y-m-d' }}", weight_kg: {{ log.weight_kg|default:0 }} },
+      {% endfor %}
+    ];
+    const rawMacros = [
+      {% for m in stats.macro_history %}
+      { date: "{{ m.date|date:'Y-m-d' }}", cals: {{ m.total_cals|default:0 }}, protein: {{ m.total_protein|default:0 }}, carbs: {{ m.total_carbs|default:0 }}, fat: {{ m.total_fat|default:0 }} },
+      {% endfor %}
+    ];
+    const consistency = {
+        workout: {{ stats.consistency.workout|default:0 }},
+        diet: {{ stats.consistency.diet|default:0 }}
+    };
+
+    // 1. Goal Progress Bar
+    {% if stats.target_weight_kg and stats.advanced_metrics.initial_weight and stats.advanced_metrics.current_weight %}
+    const current = parseFloat("{{ stats.advanced_metrics.current_weight }}");
+    const initial = parseFloat("{{ stats.advanced_metrics.initial_weight }}");
+    const target = parseFloat("{{ stats.target_weight_kg }}");
+    
+    let totalToLose = initial - target;
+    let lostSoFar = initial - current;
+    if (target > initial) {
+        totalToLose = target - initial;
+        lostSoFar = current - initial;
+    }
+    let pct = 0;
+    if (totalToLose > 0) pct = Math.max(0, Math.min(100, (lostSoFar / totalToLose) * 100));
+    
+    document.getElementById('dashboard-goal-percent').innerText = Math.round(pct) + '%';
+    document.getElementById('dashboard-goal-fill').style.width = pct + '%';
+    {% endif %}
+
+    // 2. Weight Chart
+    const ctxWeight = document.getElementById('memberWeightChart').getContext('2d');
+    if (memberWeightChart) memberWeightChart.destroy();
+    memberWeightChart = new Chart(ctxWeight, {
+        type: 'line',
+        data: {
+            labels: rawProgress.map(p => p.date).reverse(),
+            datasets: [{
+                label: 'Weight (kg)',
+                data: rawProgress.map(p => p.weight_kg).reverse(),
+                borderColor: '#0d9488',
+                backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                tension: 0.3, fill: true
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // 3. Macro Chart
+    const ctxMacro = document.getElementById('memberMacroChart').getContext('2d');
+    if (memberMacroChart) memberMacroChart.destroy();
+    memberMacroChart = new Chart(ctxMacro, {
+        type: 'bar',
+        data: {
+            labels: rawMacros.map(m => m.date),
+            datasets: [
+                { label: 'Protein (g)', data: rawMacros.map(m => m.protein), backgroundColor: '#10b981' },
+                { label: 'Carbs (g)', data: rawMacros.map(m => m.carbs), backgroundColor: '#f59e0b' },
+                { label: 'Fat (g)', data: rawMacros.map(m => m.fat), backgroundColor: '#ef4444' }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true } }
+        }
+    });
+
+    // 4. Consistency Donuts
+    const donutOptions = { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } };
+    
+    const ctxWork = document.getElementById('memberWorkoutConsistencyChart').getContext('2d');
+    if (memberWorkoutPie) memberWorkoutPie.destroy();
+    memberWorkoutPie = new Chart(ctxWork, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Missed'],
+            datasets: [{
+                data: [consistency.workout, 100 - consistency.workout],
+                backgroundColor: ['#0d9488', 'rgba(255,255,255,0.05)'],
+                borderWidth:0
+            }]
+        },
+        options: donutOptions
+    });
+
+    const ctxDiet = document.getElementById('memberDietConsistencyChart').getContext('2d');
+    if (memberDietPie) memberDietPie.destroy();
+    memberDietPie = new Chart(ctxDiet, {
+        type: 'doughnut',
+        data: {
+            labels: ['Followed', 'Missed'],
+            datasets: [{
+                data: [consistency.diet, 100 - consistency.diet],
+                backgroundColor: ['#10b981', 'rgba(255,255,255,0.05)'],
+                borderWidth:0
+            }]
+        },
+        options: donutOptions
+    });
+  }
+
+  function filterMemberMatrix() {
+      const filterVal = document.getElementById('member-matrix-filter').value;
+      const rows = document.querySelectorAll('#member-matrix-body tr');
+      rows.forEach(r => {
+          if (!filterVal || r.dataset.date === filterVal) r.style.display = '';
+          else r.style.display = 'none';
+      });
+  }
+
+  // Hook into section click
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        if (item.dataset.section === 'sec-progress') {
+            setTimeout(initMemberProgressDashboard, 100);
+        }
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Default date for progress logging
+    const pDate = document.getElementById('p-date');
+    if (pDate) pDate.value = new Date().toISOString().split('T')[0];
+
+    if (document.getElementById('sec-progress').classList.contains('active')) {
+        initMemberProgressDashboard();
+    }
+  });
+
+</script>
+{% endblock %}

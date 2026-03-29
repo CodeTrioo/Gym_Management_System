@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head><meta charset="UTF-8"><title>Payment Failed — GymPro</title>
+<link rel="stylesheet" href="{% static 'Css/main.css' %}">
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);padding:20px;}
+.fail-card{max-width:480px;width:100%;text-align:center;}
+.fail-icon{font-size:4rem;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="fail-card card">
+  <div class="fail-icon">❌</div>
+  <h2 style="margin-bottom:8px;color:var(--red);">Payment Failed</h2>
+  <p style="color:var(--text-secondary);margin-bottom:24px;">
+    {% if error %}{{ error }}{% else %}Your payment could not be completed. No amount has been deducted. Please try again.{% endif %}
+  </p>
+  {% if transaction %}
+  <div style="background:var(--bg-dark);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;">
+    <div style="color:var(--text-muted);font-size:.85rem;">Transaction ID: <code>{{ transaction.transaction_uuid|truncatechars:24 }}</code></div>
+  </div>
+  {% endif %}
+  <a href="/portal/member/" class="btn btn-primary w-full" style="justify-content:center;margin-bottom:12px;">Try Again →</a>
+  <a href="/" style="color:var(--text-muted);font-size:.85rem;">Back to Home</a>
+</div>
+<script>const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);</script>
+</body></html>

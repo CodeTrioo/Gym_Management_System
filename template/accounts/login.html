@@ -1,0 +1,124 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — GymPro</title>
+<link rel="stylesheet" href="{% static 'Css/main.css' %}">
+<style>
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(13,148,136,.18),transparent);pointer-events:none;}
+  .auth-card{width:100%;max-width:420px;position:relative;z-index:1;}
+  .auth-logo{text-align:center;margin-bottom:32px;}
+  .auth-logo .logo-icon{width:60px;height:60px;background:linear-gradient(135deg,var(--teal),#0f766e);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:12px;}
+  .auth-logo h1{font-size:2rem;margin-bottom:4px;}
+  .auth-logo p{color:var(--text-muted);font-size:.9rem;}
+  .input-icon-wrap{position:relative;}
+  .input-icon-wrap .form-control{padding-left:44px;}
+  .input-icon-wrap .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:1.1rem;}
+  .toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;}
+  .divider{text-align:center;color:var(--text-muted);font-size:.85rem;margin:20px 0;position:relative;}
+  .divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border);}
+  .divider::before{left:0;} .divider::after{right:0;}
+  .auth-footer{text-align:center;margin-top:24px;color:var(--text-muted);font-size:.9rem;}
+  .auth-footer a{color:var(--teal-light);text-decoration:none;font-weight:600;}
+  .error-msg{color:var(--red);font-size:.85rem;margin-top:8px;display:none;}
+  .btn-loader{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+{% csrf_token %}
+<div class="auth-card card">
+  <div class="auth-logo">
+    <div class="logo-icon">💪</div>
+    <h1>Welcome Back</h1>
+    <p>Sign in to your GymPro account</p>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Email Address</label>
+    <div class="input-icon-wrap">
+      <span class="icon">📧</span>
+      <input type="email" id="email" class="form-control" placeholder="you@example.com" autocomplete="email">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+      <label class="form-label">Password</label>
+      <a href="{% url 'password_reset' %}" style="font-size:.85rem; color:var(--teal-light); text-decoration:none;">Forgot Password?</a>
+    </div>
+    <div class="input-icon-wrap">
+      <span class="icon">🔒</span>
+      <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="current-password">
+      <button class="toggle-pass" type="button" onclick="togglePwd('password',this)">👁</button>
+    </div>
+  </div>
+
+  <p class="error-msg" id="error-msg"></p>
+
+  <button class="btn btn-primary w-full" id="login-btn" onclick="doLogin()" style="margin-top:8px;justify-content:center;gap:10px;">
+    <span class="btn-loader" id="btn-loader"></span>
+    Sign In
+  </button>
+
+  <div class="divider">or</div>
+
+  <div class="auth-footer">
+    Don't have an account? <a href="/register/">Create one free →</a>
+  </div>
+</div>
+
+<script>
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errEl = document.getElementById('error-msg');
+  const btn = document.getElementById('login-btn');
+  const loader = document.getElementById('btn-loader');
+
+  errEl.style.display = 'none';
+  if (!email || !password) { showErr('Please enter email and password.'); return; }
+
+  btn.disabled = true; loader.style.display = 'block';
+
+  try {
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+      document.cookie.split('; ').find(r=>r.startsWith('csrftoken='))?.split('=')[1]||'';
+    const res = await fetch('/api/login/', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':csrf},
+      body:JSON.stringify({email,password})
+    });
+    const data = await res.json();
+    if (res.ok) { 
+        const params = new URLSearchParams(window.location.search);
+        const nextUrl = params.get('next');
+        window.location.href = nextUrl || data.redirect || '/portal/member/'; 
+    }
+    else { showErr(data.message || 'Login failed.'); }
+  } catch(e) { showErr('Network error. Try again.'); }
+  finally { btn.disabled = false; loader.style.display = 'none'; }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+// Theme
+const t = localStorage.getItem('theme')||'dark';
+document.documentElement.setAttribute('data-theme', t);
+</script>
+</body>
+</html>

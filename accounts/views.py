@@ -1,200 +1,273 @@
-# ===================================================
-# SECURE views.py - CSRF Protection ENABLED # ===================================================
-
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.shortcuts import render, redirect
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+from django.core.mail import send_mail
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.urls import reverse
+from accounts.models import UserProfile
+from staff_control.models import StaffPermission
 import json
 import logging
 
 logger = logging.getLogger(__name__)
+signer = TimestampSigner()
+
 
 def index(request):
-    return render(request, 'index.html')
+    return redirect('overview')
+
 
 @ensure_csrf_cookie
 def register_view(request):
-    """Render registration page"""
     if request.user.is_authenticated:
-        return redirect('dashboard')
-    return render(request, 'register.html')
+        return _redirect_by_role(request.user)
+    return render(request, 'accounts/register.html')
 
+
+@csrf_exempt
 @require_http_methods(["POST"])
 def register_user(request):
-    """
-    Handle user registration - CSRF PROTECTED     Saves ONLY to auth_user table
-    """
-    
-    print("="*60)
-    print("REGISTRATION REQUEST RECEIVED")
-    print(f"Method: {request.method}")
-    print(f"Content-Type: {request.content_type}")
-    print(f"CSRF Token in headers: {'X-CSRFToken' in request.headers}")
-    print("="*60)
-    
     try:
-        # Handle both JSON and form data
         if request.content_type == 'application/json':
             data = json.loads(request.body)
         else:
             data = request.POST
-        
-        # Get form data
-        first_name = data.get("firstName") or data.get("first_name", "")
-        last_name = data.get("lastName") or data.get("last_name", "")
+
         email = data.get("email", "").strip().lower()
+        full_name = data.get("full_name", "").strip()
         password = data.get("password", "")
         confirm_password = data.get("confirmPassword") or data.get("confirm_password", "")
 
-        print(f"Parsed data:")
-        print(f"  First Name: {first_name}")
-        print(f"  Last Name: {last_name}")
-        print(f"  Email: {email}")
-
-        # Validation
-        if not first_name or not last_name:
-            print("ERROR: Name missing")
-            return JsonResponse({"message": "First name and last name are required"}, status=400)
-        
         if not email:
-            print("ERROR: Email missing")
             return JsonResponse({"message": "Email is required"}, status=400)
-        
         if not password:
-            print("ERROR: Password missing")
             return JsonResponse({"message": "Password is required"}, status=400)
-        
         if password != confirm_password:
-            print("ERROR: Passwords don't match")
             return JsonResponse({"message": "Passwords do not match"}, status=400)
-        
         if len(password) < 8:
-            print("ERROR: Password too short")
-            return JsonResponse({"message": "Password must be at least 8 characters long"}, status=400)
-        
-        # Check if email already exists
+            return JsonResponse({"message": "Password must be at least 8 characters"}, status=400)
         if User.objects.filter(email=email).exists():
-            print(f"ERROR: Email {email} already exists")
-            return JsonResponse({"message": "Email already registered. Please login instead."}, status=400)
+            return JsonResponse({"message": "Email already registered. Please login."}, status=400)
 
-        print("Creating user in auth_user table...")
+        registration_data = {
+            'email': email,
+            'full_name': full_name,
+            'password': password
+        }
+        token = signer.sign_object(registration_data)
+        activation_url = request.build_absolute_uri(reverse('activate_account', args=[token]))
         
-        # Create Django User (auth_user)
-        django_user = User.objects.create_user(
-            username=email,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name
+        email_body = render_to_string('accounts/activation_email.txt', {'activation_url': activation_url})
+        send_mail(
+            'Verify your GymPro Account',
+            email_body,
+            settings.EMAIL_HOST_USER,
+            [email],
+            fail_silently=False,
         )
-        print(f"Created Django User: {django_user.username} (ID: {django_user.id})")
-        
-        # Log the user in
-        login(request, django_user)
-        print(f"User logged in via Django auth")
 
-        logger.info(f"User registered successfully: {email}")
+        return JsonResponse({"message": "Please check your email to complete registration. The link expires in 24 hours.", "redirect": ""})
 
-        return JsonResponse({
-            "message": "Registration successful! Redirecting to dashboard...",
-            "redirect": "/dashboard/"
-        })
-    
-    except json.JSONDecodeError as e:
-        print(f"ERROR: JSON decode error: {str(e)}")
-        return JsonResponse({"message": "Invalid JSON data"}, status=400)
     except Exception as e:
-        print(f"ERROR: Exception occurred: {str(e)}")
-        logger.error(f"Registration error: {str(e)}", exc_info=True)
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Registration error: {e}", exc_info=True)
         return JsonResponse({"message": f"Registration failed: {str(e)}"}, status=500)
+
+
+def activate_account(request, token):
+    try:
+        data = signer.unsign_object(token, max_age=86400) # 24 hours
+    except SignatureExpired:
+        return render(request, 'accounts/activation_invalid.html', {'message': 'The activation link has expired. Please register again.'})
+    except BadSignature:
+        return render(request, 'accounts/activation_invalid.html', {'message': 'The activation link is invalid.'})
+
+    email = data.get('email')
+    full_name = data.get('full_name')
+    password = data.get('password')
+
+    if User.objects.filter(email=email).exists():
+        return redirect('login')
+
+    user = User.objects.create_user(username=email, email=email, password=password)
+    if full_name:
+        names = full_name.split(' ', 1)
+        user.first_name = names[0]
+        if len(names) > 1:
+            user.last_name = names[1]
+        user.save()
+
+    profile = UserProfile.objects.create(user=user, role='member')
+    
+    return render(request, 'accounts/activation_success.html')
+
 
 @ensure_csrf_cookie
 def login_view(request):
-    """Render login page"""
     if request.user.is_authenticated:
-        return redirect('dashboard')
-    return render(request, 'login.html')
+        return _redirect_by_role(request.user)
+    return render(request, 'accounts/login.html')
 
+
+@csrf_exempt
 @require_http_methods(["POST"])
 def login_user(request):
-    """
-    Handle user login - CSRF PROTECTED     Uses Django's auth_user table
-    """
-    
-    print("="*60)
-    print("LOGIN REQUEST RECEIVED")
-    print(f"Method: {request.method}")
-    print(f"Content-Type: {request.content_type}")
-    print(f"CSRF Token in headers: {'X-CSRFToken' in request.headers}")
-    print("="*60)
-    
     try:
-        # Handle both JSON and form data
         if request.content_type == 'application/json':
             data = json.loads(request.body)
         else:
             data = request.POST
-        
-        email = data.get("email") or data.get("username", "").strip().lower()
+
+        email = data.get("email", "").strip().lower()
         password = data.get("password", "")
 
-        print(f"Login attempt for: {email}")
-
         if not email or not password:
-            print("ERROR: Email or password missing")
             return JsonResponse({"message": "Email and password are required"}, status=400)
 
-        # Authenticate using Django's auth system
         user = authenticate(request, username=email, password=password)
-        
         if user is not None:
-            print(f"Authentication successful for: {email}")
-            
-            # Log the user in
             login(request, user)
-            print(f"User logged in via Django auth")
-            
-            logger.info(f"User logged in successfully: {email}")
-            
-            return JsonResponse({
-                "message": "Login successful",
-                "redirect": "/dashboard/"
-            })
+            redirect_url = _get_portal_url(user)
+            return JsonResponse({"message": "Login successful", "redirect": redirect_url})
         else:
-            print(f"Authentication failed for: {email}")
             return JsonResponse({"message": "Invalid email or password"}, status=401)
-    
-    except json.JSONDecodeError as e:
-        print(f"ERROR: JSON decode error: {str(e)}")
-        return JsonResponse({"message": "Invalid JSON data"}, status=400)
+
     except Exception as e:
-        print(f"ERROR: Exception occurred: {str(e)}")
-        logger.error(f"Login error: {str(e)}", exc_info=True)
-        import traceback
-        traceback.print_exc()
         return JsonResponse({"message": f"Login failed: {str(e)}"}, status=500)
 
+
 def logout_user(request):
-    """Handle user logout"""
     logout(request)
-    messages.success(request, "You have been logged out successfully.")
-    return redirect('index')
+    return redirect('login')
+
+
+def _redirect_by_role(user):
+    return redirect(_get_portal_url(user))
+
+
+def _get_portal_url(user):
+    if getattr(user, 'is_superuser', False):
+        return '/portal/admin/'
+    try:
+        role = user.profile.role
+        if role == 'admin':
+            return '/portal/admin/'
+        elif role == 'staff':
+            return '/portal/staff/'
+    except Exception:
+        pass
+    return '/portal/member/'
+
+
+# Admin: Create Staff Account
+@login_required
+def create_staff(request):
+    try:
+        if request.user.profile.role != 'admin':
+            return JsonResponse({"message": "Unauthorized"}, status=403)
+    except Exception:
+        return JsonResponse({"message": "Unauthorized"}, status=403)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+            email = data.get('email', '').strip().lower()
+            full_name = data.get('full_name', '').strip()
+            password = data.get('password', '')
+            speciality = data.get('speciality', '')
+
+            if not email or not password:
+                return JsonResponse({"message": "Email and password required"}, status=400)
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({"message": "Email already exists"}, status=400)
+
+            user = User.objects.create_user(username=email, email=email, password=password)
+            if full_name:
+                names = full_name.split(' ', 1)
+                user.first_name = names[0]
+                if len(names) > 1:
+                    user.last_name = names[1]
+                user.save()
+
+            profile = UserProfile.objects.create(user=user, role='staff', speciality=speciality)
+            StaffPermission.get_or_create_for_staff(user)
+
+            return JsonResponse({"message": "Staff account created!", "staff_id": user.id})
+        except Exception as e:
+            return JsonResponse({"message": str(e)}, status=500)
+
+    return JsonResponse({"message": "Method not allowed"}, status=405)
+
+
+# Admin: Update staff profile
+@login_required
+def update_staff_profile(request, staff_id):
+    try:
+        if request.user.profile.role != 'admin':
+            return JsonResponse({"message": "Unauthorized"}, status=403)
+    except Exception:
+        return JsonResponse({"message": "Unauthorized"}, status=403)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+            staff_user = get_object_or_404(User, id=staff_id)
+            
+            full_name = data.get('full_name', '').strip()
+            if full_name:
+                names = full_name.split(' ', 1)
+                staff_user.first_name = names[0]
+                staff_user.last_name = names[1] if len(names) > 1 else ''
+                staff_user.save()
+
+            profile = staff_user.profile
+            profile.speciality = data.get('speciality', profile.speciality)
+            profile.bio = data.get('bio', profile.bio)
+            profile.phone = data.get('phone', profile.phone)
+            profile.address = data.get('address', profile.address)
+            profile.profile_image_url = data.get('profile_image_url', profile.profile_image_url)
+            profile.save()
+            return JsonResponse({"message": "Staff profile updated!"})
+        except Exception as e:
+            return JsonResponse({"message": str(e)}, status=500)
+
+    return JsonResponse({"message": "Method not allowed"}, status=405)
+
 
 @login_required
-def dashboard(request):
-    """Dashboard view - SECURED with @login_required"""
-    
-    context = {
-        'user': request.user,
-        'user_name': request.user.get_full_name(),
-        'user_email': request.user.email,
-    }
-    
-    return render(request, 'dashboard.html', context)
+def update_profile(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+            profile = request.user.profile
+            profile.phone = data.get('phone', profile.phone)
+            profile.address = data.get('address', profile.address)
+            profile.bio = data.get('bio', profile.bio)
+            profile.profile_image_url = data.get('profile_image_url', profile.profile_image_url)
+            
+            target_weight_kg_val = data.get('target_weight_kg')
+            if target_weight_kg_val is not None:
+                if target_weight_kg_val == '':
+                    profile.target_weight_kg = None
+                else:
+                    try:
+                        profile.target_weight_kg = float(target_weight_kg_val)
+                    except ValueError:
+                        pass
+            
+            # Speciality is ONLY updatable by admin (via update_staff_profile)
+            # or if the current user is an admin updating their own profile (optional, but keep it safe)
+            if profile.role == 'staff' and request.user.profile.role == 'admin':
+                profile.speciality = data.get('speciality', profile.speciality)
+            
+            profile.save()
+            return JsonResponse({"message": "Profile updated successfully!"})
+        except Exception as e:
+            return JsonResponse({"message": str(e)}, status=500)
+    return JsonResponse({"message": "Method not allowed"}, status=405)

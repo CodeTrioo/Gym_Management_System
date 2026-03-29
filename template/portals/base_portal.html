@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}GymPro Portal{% endblock %}</title>
+<link rel="stylesheet" href="{% static 'Css/main.css' %}">
+<link rel="stylesheet" href="{% static 'Css/portal.css' %}">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+{% csrf_token %}
+
+<div class="portal-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="sidebar-logo">
+        <div class="logo-icon">💪</div>
+        <div>
+          <div class="logo-text">GymPro</div>
+          <div class="logo-sub">{% block portal_name %}Portal{% endblock %}</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="sidebar-user">
+      <img src="{{ profile.get_profile_image }}" class="user-avatar" alt="avatar"
+           onerror="this.src='https://ui-avatars.com/api/?name={{ user.email }}&background=0d9488&color=fff'">
+      <div>
+        <div class="user-name">{{ user.get_full_name|default:user.email|truncatechars:22 }}</div>
+        <div class="user-role">{{ profile.role }}</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% block sidebar_nav %}{% endblock %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">🌙 Dark Mode</button>
+      <a href="/logout/" class="nav-item" style="color:var(--red);">
+        <span class="nav-icon">🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main -->
+  <main class="portal-main">
+    <div class="portal-topbar">
+      <div>
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <h1 class="page-title" id="page-title">{% block default_title %}Dashboard{% endblock %}</h1>
+        <p class="page-subtitle" id="page-subtitle"></p>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <a href="/" class="btn btn-outline btn-sm">🏠 Home</a>
+        {% block topbar_extra %}{% endblock %}
+      </div>
+    </div>
+
+    {% block portal_content %}{% endblock %}
+  </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="{% static 'JS/cloudinary.js' %}"></script>
+<script src="{% static 'JS/portal.js' %}"></script>
+<script>
+const CLOUDINARY_CLOUD = "{{ CLOUDINARY_CLOUD_NAME }}";
+const CLOUDINARY_PRESET = "{{ CLOUDINARY_UPLOAD_PRESET }}";
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

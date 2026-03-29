@@ -1,0 +1,1524 @@
+{% extends 'portals/base_portal.html' %}
+{% load static %}
+
+{% block title %}Staff Portal — GymPro{% endblock %}
+{% block portal_name %}Instructor Portal{% endblock %}
+{% block default_title %}Staff Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
+<style>
+  .member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .member-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--teal);
+  }
+
+  .tab-pills {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .tab-pill {
+    padding: 8px 18px;
+    border-radius: 50px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: .85rem;
+    transition: var(--transition);
+  }
+
+  .tab-pill.active {
+    background: var(--teal);
+    color: #fff;
+    border-color: var(--teal);
+  }
+</style>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-section-label">Main</div>
+<div class="nav-item active" data-section="sec-dashboard" data-title="Instructor Dashboard"
+  data-subtitle="Welcome back!">
+  <span class="nav-icon">🏠</span> Dashboard
+</div>
+{% if 'my_schedule' in allowed_nav %}
+<div class="nav-item" data-section="sec-schedule" data-title="My Schedule" data-subtitle="Manage your available slots">
+  <span class="nav-icon">📅</span> My Schedule
+</div>
+{% endif %}
+{% if 'my_members' in allowed_nav %}
+<div class="nav-item {% if 'my_schedule' not in allowed_nav %}active{% endif %}" data-section="sec-members"
+  data-title="My Members" data-subtitle="Assigned trainees">
+  <span class="nav-icon">👥</span> My Members
+</div>
+{% endif %}
+{% if 'diet_plans' in allowed_nav %}
+<div class="nav-item" data-section="sec-diet" data-title="Diet Plans" data-subtitle="Manage member nutrition">
+  <span class="nav-icon">🥗</span> Diet Plans
+</div>
+{% endif %}
+{% if 'workout_plans' in allowed_nav %}
+<div class="nav-item" data-section="sec-workout" data-title="Workout Plans" data-subtitle="Training programs">
+  <span class="nav-icon">💪</span> Workout Plans
+</div>
+{% endif %}
+{% if 'global_workout' in allowed_nav %}
+<div class="nav-item" data-section="sec-global-workout" data-title="Global Workouts"
+  data-subtitle="Generic class library">
+  <span class="nav-icon">🌍</span> Library
+</div>
+{% endif %}
+
+{% if 'progress' in allowed_nav %}
+<div class="nav-item" data-section="sec-progress" data-title="Member Progress" data-subtitle="Track transformations">
+  <span class="nav-icon">📈</span> Progress
+</div>
+{% endif %}
+<div class="nav-item" data-section="sec-member-detail" data-title="Member Detail" data-subtitle="Full client profile"
+  style="display:none;" id="nav-member-detail">
+  <span class="nav-icon">👤</span> Client
+</div>
+<div class="nav-section-label">Account</div>
+<div class="nav-item" data-section="sec-profile" data-title="My Profile" data-subtitle="Manage your settings">
+  <span class="nav-icon">👤</span> My Profile
+</div>
+{% endblock %}
+
+{% block portal_content %}
+
+<div class="portal-section active" id="sec-dashboard">
+  <div class="stats-grid" style="margin-bottom:24px;">
+    <div class="stat-card">
+      <div class="stat-number">{{ member_count }}</div>
+      <div class="stat-label">My Members</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ upcoming_bookings|length }}</div>
+      <div class="stat-label">Today's Sessions</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-number">{{ profile.speciality|default:"—" }}</div>
+      <div class="stat-label">Speciality</div>
+    </div>
+  </div>
+  <div class="grid-2" style="gap:20px;margin-bottom:24px;">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:16px;">📣 Latest Announcements</div>
+      {% for ann in announcements %}
+      <div style="padding:12px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;">
+        {% if ann.image_url %}
+        <img src="{{ ann.image_url }}" style="width:50px;height:50px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+        {% endif %}
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:.9rem;margin-bottom:2px;">{{ ann.title }}</div>
+          <div style="color:var(--text-secondary);font-size:.8rem;line-height:1.3;">{{ ann.body|truncatechars:80 }}
+          </div>
+          <div style="font-size:.7rem;color:var(--text-muted);margin-top:4px;">{{ ann.created_at|date:"M d, Y" }}</div>
+        </div>
+      </div>
+      {% empty %}<p style="color:var(--text-muted);">No announcements.</p>{% endfor %}
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,var(--teal-glow),transparent); border:1px solid var(--border-teal); overflow:hidden;">
+      <div class="section-title" style="margin-bottom:12px;">📋 Upcoming Bookings</div>
+      <div class="table-wrapper" style="margin: 0 -16px;">
+        <table style="font-size: 0.82rem;">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Date & Time</th>
+              <th>Session</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in upcoming_bookings|slice:":5" %}
+            <tr>
+              <td><div style="font-weight:600;">{{ b.member.get_full_name|default:b.member.email|truncatechars:15 }}</div></td>
+              <td>{{ b.slot.date|date:"M d" }} · {{ b.slot.start_time|time:"H:i" }}</td>
+              <td>{{ b.slot.title|default:"Training"|truncatechars:15 }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" style="text-align:center; color:var(--text-muted); padding: 20px;">No upcoming bookings.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if upcoming_bookings|length > 5 %}
+      <div style="text-align:center; margin-top:10px; font-size:0.75rem; color:var(--text-muted);">
+        + {{ upcoming_bookings|length|add:"-5" }} more sessions today
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ─────── SCHEDULE ─────── -->
+{% if 'my_schedule' in allowed_nav %}
+<div class="portal-section" id="sec-schedule">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-header">
+      <span class="section-title">📅 My Schedule</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal('add-slot-modal')">+ Add Slot</button>
+    </div>
+    <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:16px;">Click a slot to delete it. Members can only
+      book your available slots.</p>
+    <div id="staff-calendar" style="min-height:500px;"></div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ─────── MEMBERS ─────── -->
+{% if 'my_members' in allowed_nav %}
+<div class="portal-section" id="sec-members">
+  <div class="card">
+    <div class="section-header"><span class="section-title">👥 My Members ({{ member_count }})</span></div>
+    {% for member in my_members %}
+    <div class="member-row">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <img src="{{ member.get_profile_image }}" class="member-avatar" alt="avatar"
+          onerror="this.src='https://ui-avatars.com/api/?name={{ member.user.email }}&background=0d9488&color=fff'">
+        <div>
+          <div style="font-weight:600;font-size:.9rem;">{{ member.user.get_full_name|default:member.user.email }}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">{{ member.user.email }}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="viewMemberDashboard('{{ member.user.id }}')">👁️ View</button>
+        <button class="btn btn-primary btn-sm" onclick="goToProgressTab('{{ member.user.id }}')">📈 Progress</button>
+      </div>
+    </div>
+    {% empty %}
+    <p style="color:var(--text-muted);">No members assigned yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ─────── DIET PLANS ─────── -->
+{% if 'diet_plans' in allowed_nav %}
+<div class="portal-section" id="sec-diet">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="section-header">
+      <span class="section-title">🥗 Diet Management</span>
+      <div class="tab-pills" style="margin-bottom:0;">
+        <button class="tab-pill active" onclick="switchDietTab('templates', this)">My Templates</button>
+        <button class="tab-pill" onclick="switchDietTab('active', this)">Active Assignments</button>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="createNewDietTemplate()">+ New Template</button>
+    </div>
+  </div>
+
+  <!-- Templates List -->
+  <div id="diet-templates-view">
+    <div class="grid-2" style="gap:20px;" id="diet-templates-grid">
+      {% for plan in diet_templates %}
+      <div class="card" style="border: 1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <h3 style="margin:0;">{{ plan.title }}</h3>
+          <span class="badge badge-teal">{{ plan.category|default:"General" }}</span>
+        </div>
+        <p style="color:var(--text-secondary); font-size:0.85rem; margin:10px 0;">{{ plan.notes|truncatechars:100 }}</p>
+        <div style="display:flex; gap:8px; margin-top:15px;">
+          <button class="btn btn-primary btn-sm" onclick="editDietTemplate('{{ plan.id }}')">🛠️ Edit</button>
+          <button class="btn btn-outline btn-sm" onclick="openAssignModal('{{ plan.id }}', 'diet')">👥 Assign</button>
+          <button class="btn btn-outline btn-sm" onclick="duplicatePlan('{{ plan.id }}', 'diet')">📋 Clone</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePlan('{{ plan.id }}', 'diet')">🗑️</button>
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:var(--text-muted); padding:20px;">No templates found. Create one to get started!</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Active Assignments List -->
+  <div id="diet-active-view" style="display:none;">
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Current Plan</th>
+              <th>Last Updated</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in my_members %}
+            <tr>
+              <td>{{ m.user.get_full_name|default:m.user.email }}</td>
+              <td>
+                {% with plan=m.user.diet_plans.first %}
+                  {% if plan %}{{ plan.title }}{% else %}<span style="color:var(--text-muted);">None</span>{% endif %}
+                {% endwith %}
+              </td>
+              <td>{% with plan=m.user.diet_plans.first %}{{ plan.updated_at|date:"M d, Y"|default:"—" }}{% endwith %}</td>
+              <td>
+                <button class="btn btn-outline btn-sm" onclick="openMemberEditor('{{ m.user.id }}', 'diet')">⚙️ Customize</button>
+                <button class="btn btn-danger btn-sm" onclick="removeMemberPlan('{{ m.user.id }}', 'diet')">🗑️ Delete</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- The Editor (Hidden by default, shown when editing) -->
+  <div id="diet-editor" class="card" style="display:none; margin-top:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+       <h2 id="diet-editor-title">Edit Plan</h2>
+       <button class="btn btn-outline btn-sm" onclick="closeDietEditor()">✕ Close</button>
+    </div>
+    <div class="grid-2" style="gap:12px;">
+        <div class="form-group"><label class="form-label">Plan Title</label><input type="text" id="diet-title" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Category (e.g. Keto, Bulking)</label><input type="text" id="diet-category" class="form-control"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea id="diet-notes" class="form-control" rows="2"></textarea></div>
+    <button class="btn btn-primary w-full" onclick="saveDietPlan()">Save Plan Header</button>
+    
+    <hr style="border-color:var(--border);margin:20px 0;">
+    <div class="section-header">
+      <span class="section-title">Meal Schedule</span>
+      <button class="btn btn-outline btn-sm" onclick="openModal('add-meal-modal')">+ Add Meal</button>
+    </div>
+    <div id="diet-weekly-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; overflow-x:auto; margin-top:15px;">
+        <!-- Days headers -->
+        {% for day in days_list %}
+        <div class="day-col" style="min-width:150px;">
+            <div style="background:var(--bg-alt); padding:8px; text-align:center; font-weight:700; border-radius:8px; margin-bottom:10px; border:1px solid var(--border);">
+                {{ day|title }}
+                <button class="btn btn-sm" style="padding:2px 4px; font-size:10px; float:right;" onclick="copyDay('{{ day }}', 'diet')" title="Copy this day's meals">📋</button>
+            </div>
+            <div id="meals-{{ day }}" class="meals-dropzone" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ─────── WORKOUT PLANS ─────── -->
+{% if 'workout_plans' in allowed_nav %}
+<div class="portal-section" id="sec-workout">
+  <div class="card" style="margin-bottom:16px;">
+    <div class="section-header">
+      <span class="section-title">💪 Workout Management</span>
+      <div class="tab-pills" style="margin-bottom:0;">
+        <button class="tab-pill active" onclick="switchWorkoutTab('templates', this)">My Templates</button>
+        <button class="tab-pill" onclick="switchWorkoutTab('active', this)">Active Assignments</button>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="createNewWorkoutTemplate()">+ New Template</button>
+    </div>
+  </div>
+
+  <!-- Templates List -->
+  <div id="workout-templates-view">
+    <div class="grid-2" style="gap:20px;" id="workout-templates-grid">
+      {% for plan in workout_templates %}
+      <div class="card" style="border: 1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <h3 style="margin:0;">{{ plan.title }}</h3>
+          <span class="badge badge-teal">{{ plan.category|default:"General" }}</span>
+        </div>
+        <p style="color:var(--text-secondary); font-size:0.85rem; margin:10px 0;">{{ plan.notes|truncatechars:100 }}</p>
+        <div style="display:flex; gap:8px; margin-top:15px;">
+          <button class="btn btn-primary btn-sm" onclick="editWorkoutTemplate('{{ plan.id }}')">🛠️ Edit</button>
+          <button class="btn btn-outline btn-sm" onclick="openAssignModal('{{ plan.id }}', 'workout')">👥 Assign</button>
+          <button class="btn btn-outline btn-sm" onclick="duplicatePlan('{{ plan.id }}', 'workout')">📋 Clone</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePlan('{{ plan.id }}', 'workout')">🗑️</button>
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:var(--text-muted); padding:20px;">No templates found.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Active Assignments List -->
+  <div id="workout-active-view" style="display:none;">
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Current Plan</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in my_members %}
+            <tr>
+              <td>{{ m.user.get_full_name|default:m.user.email }}</td>
+              <td>
+                {% with plan=m.user.workout_plans.first %}
+                  {% if plan %}{{ plan.title }}{% else %}<span style="color:var(--text-muted);">None</span>{% endif %}
+                {% endwith %}
+              </td>
+              <td>{% with plan=m.user.workout_plans.first %}{{ plan.updated_at|date:"M d"|default:"—" }}{% endwith %}</td>
+              <td>
+                <button class="btn btn-outline btn-sm" onclick="openMemberEditor('{{ m.user.id }}', 'workout')">⚙️ Customize</button>
+                <button class="btn btn-danger btn-sm" onclick="removeMemberPlan('{{ m.user.id }}', 'workout')">🗑️ Delete</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="workout-editor" class="card" style="display:none; margin-top:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+       <h2 id="workout-editor-title">Edit Workout Plan</h2>
+       <button class="btn btn-outline btn-sm" onclick="closeWorkoutEditor()">✕ Close</button>
+    </div>
+    <div class="grid-2" style="gap:12px;">
+        <div class="form-group"><label class="form-label">Plan Title</label><input type="text" id="workout-title" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Category</label><input type="text" id="workout-category" class="form-control"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea id="workout-notes" class="form-control" rows="2"></textarea></div>
+    <button class="btn btn-primary w-full" onclick="saveWorkoutPlan()">Save Plan Header</button>
+    
+    <hr style="border-color:var(--border);margin:20px 0;">
+    <div class="section-header">
+      <span class="section-title">Exercise Schedule</span>
+      <button class="btn btn-outline btn-sm" onclick="openModal('add-exercise-modal')">+ Add Exercise</button>
+    </div>
+    <div id="workout-weekly-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; overflow-x:auto; margin-top:15px;">
+        {% for day in days_list %}
+        <div class="day-col" style="min-width:180px;">
+            <div style="background:var(--bg-alt); padding:8px; text-align:center; font-weight:700; border-radius:8px; margin-bottom:10px; border:1px solid var(--border);">
+                {{ day|title }}
+                <button class="btn btn-sm" style="padding:2px 4px; font-size:10px; float:right;" onclick="copyDay('{{ day }}', 'workout')" title="Copy day">📋</button>
+            </div>
+            <div id="exercises-{{ day }}" class="exercises-dropzone" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ─────── GLOBAL WORKOUTS ─────── -->
+<div class="portal-section" id="sec-global-workout">
+  <div class="card">
+    <div class="section-header" style="flex-direction:column;align-items:flex-start;gap:12px;">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+        <span class="section-title">🌍 Global Workouts Library</span>
+        <button class="btn btn-primary btn-sm"
+          onclick="document.getElementById('gw-id').value=''; document.getElementById('add-gw-modal').querySelector('.modal-title').innerText='Add Global Class'; openModal('add-gw-modal')">+
+          Add Class</button>
+      </div>
+      <div class="tab-pills" id="gw-filters">
+        <button class="tab-pill active" onclick="filterGlobal('all',this)">All</button>
+        {% regroup global_workouts by category as cat_list %}
+        {% for cat in cat_list %}
+        {% if cat.grouper %}
+        <button class="tab-pill" onclick="filterGlobal('{{ cat.grouper }}',this)">{{ cat.grouper|title }}</button>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;" id="gw-grid">
+      {% for gw in global_workouts %}
+      <div class="card gw-card" data-cat="{{ gw.category }}"
+        style="padding:0;overflow:hidden;border:1px solid var(--border);">
+        {% if gw.video_url %}
+        <div style="width:100%;height:180px;background:#000;position:relative;cursor:pointer;"
+          onclick="window.open('{{ gw.video_url }}','_blank')">
+          <img src="{{ gw.get_thumbnail_url }}" style="width:100%;height:100%;object-fit:cover;opacity:0.8;"
+            onerror="this.src='https://via.placeholder.com/640x360?text=Video+Preview'">
+          <div
+            style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:3rem;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,0.5);">
+            ▶</div>
+        </div>
+        {% endif %}
+        <div style="padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+            <span class="badge badge-teal" style="font-size:0.7rem;">{{ gw.category|title }}</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-gold btn-sm" style="padding:4px 8px;font-size:0.7rem;" data-id="{{ gw.id }}"
+                data-title="{{ gw.title }}" data-desc="{{ gw.description }}" data-video="{{ gw.video_url }}"
+                onclick="editGlobalWorkoutBtn(this)">Edit</button>
+              <button class="btn btn-danger btn-sm" style="padding:4px 8px;font-size:0.7rem;"
+                onclick="deleteGlobalWorkout({{ gw.id }})">Delete</button>
+            </div>
+          </div>
+          <div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">{{ gw.title }}</div>
+          <p style="color:var(--text-muted);font-size:0.85rem;">{{ gw.description }}</p>
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:var(--text-muted);text-align:center;padding:40px;width:100%;">No library workouts yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ─────── MEMBER DETAIL ─────── -->
+<div class="portal-section" id="sec-member-detail">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button class="btn btn-outline btn-sm" onclick="document.querySelector('[data-section=sec-members]').click()">← Back</button>
+        <h2 id="md-name" style="margin:0;">Member Name</h2>
+      </div>
+      <div id="md-email" style="color:var(--text-muted); font-weight:600;">email@example.com</div>
+    </div>
+
+    <div class="grid-2" style="gap:20px;">
+      <!-- Diet Overview -->
+      <div class="card" style="background:var(--bg-alt);">
+        <div class="section-header">
+          <span class="section-title">🥗 Diet Plan</span>
+          <div id="md-diet-actions"></div>
+        </div>
+        <div id="md-diet-info">No plan assigned.</div>
+        <div id="md-meals-list" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- Workout Overview -->
+      <div class="card" style="background:var(--bg-alt);">
+        <div class="section-header">
+          <span class="section-title">💪 Workout Plan</span>
+          <div id="md-workout-actions"></div>
+        </div>
+        <div id="md-workout-info">No plan assigned.</div>
+        <div id="md-exercises-list" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;background:var(--bg-alt);">
+      <div class="section-header"><span class="section-title">📈 Recent Progress Logs</span></div>
+      <table style="width:100%;font-size:0.9rem;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Weight</th>
+            <th>Height</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="md-progress-body"></tbody>
+      </table>
+    </div>
+</div>
+
+<!-- ─────── MEMBER PROGRESS (Standalone Tab) ─────── -->
+<div class="portal-section" id="sec-progress">
+    <div class="card" style="margin-bottom:20px;">
+      <div class="section-header">
+        <span class="section-title">📉 Member Progress Dashboard</span>
+        <select id="progress-member-select" class="form-control" style="max-width:300px;" onchange="loadProgressDashboard(this.value)">
+          <option value="">-- Select Member --</option>
+          {% for m in my_members %}
+          <option value="{{ m.user.id }}">{{ m.user.get_full_name|default:m.user.email }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div id="progress-dashboard" style="display:none;">
+      
+      <!-- Smart Insights Banners -->
+      <div id="prog-insights-container" style="margin-bottom:20px; display:flex; flex-direction:column; gap:10px;"></div>
+
+      <div class="grid-4" style="gap:15px; margin-bottom:20px;">
+        <div class="card" style="padding:15px; text-align:center;">
+          <div style="color:var(--text-muted); font-size:0.85rem;">Current BMI</div>
+          <div id="prog-bmi" style="font-size:1.8rem; font-weight:700; color:var(--teal);">--</div>
+          <div id="prog-bmi-sub" style="font-size:0.75rem;">Initial: --</div>
+        </div>
+        <div class="card" style="padding:15px; text-align:center; position:relative;">
+          <div style="color:var(--text-muted); font-size:0.85rem;">Weight Delta</div>
+          <div id="prog-weight" style="font-size:1.8rem; font-weight:700;">--</div>
+          <div id="prog-weight-sub" style="font-size:0.75rem; margin-bottom:8px;">Total Change</div>
+          <div id="prog-goal-container" style="display:none; text-align:left; background:var(--bg-default); padding:5px; border-radius:6px;">
+             <div style="display:flex; justify-content:space-between; font-size:0.7rem;">
+               <span style="color:var(--text-muted);">Progress to Goal</span>
+               <strong id="prog-goal-text">--</strong>
+             </div>
+             <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; margin-top:4px; overflow:hidden;">
+               <div id="prog-goal-bar" style="height:100%; background:var(--gold); width:0%;"></div>
+             </div>
+          </div>
+        </div>
+        <div class="card" style="padding:15px; text-align:center;">
+          <div style="color:var(--text-muted); font-size:0.85rem;">Waist Delta</div>
+          <div id="prog-waist" style="font-size:1.8rem; font-weight:700;">--</div>
+          <div id="prog-waist-sub" style="font-size:0.75rem;">Total Change</div>
+        </div>
+        <div class="card" style="padding:15px; text-align:center;">
+          <div style="color:var(--text-muted); font-size:0.85rem;">Chest Delta</div>
+          <div id="prog-chest" style="font-size:1.8rem; font-weight:700;">--</div>
+          <div id="prog-chest-sub" style="font-size:0.75rem;">Total Change</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+        <div class="card">
+          <div class="section-header"><span class="section-title">📉 Weight Trend (30 Days)</span></div>
+          <div style="height:250px;"><canvas id="weightChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="section-header"><span class="section-title">🍽️ Macro History (30 Days)</span></div>
+          <div style="height:250px;"><canvas id="macroChart"></canvas></div>
+        </div>
+      </div>
+      
+      <div class="grid-2" style="gap:20px; margin-bottom:20px;">
+        <div class="card" style="display:flex; flex-direction:column; align-items:center;">
+          <div class="section-header" style="width:100%;"><span class="section-title">💪 Workout Consistency (30 Days)</span></div>
+          <div style="height:180px; width:180px; position:relative;">
+             <canvas id="workoutConsistencyChart"></canvas>
+             <div id="workout-percent-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.5rem;">--</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex; flex-direction:column; align-items:center;">
+          <div class="section-header" style="width:100%;"><span class="section-title">🥗 Diet Consistency (30 Days)</span></div>
+          <div style="height:180px; width:180px; position:relative;">
+             <canvas id="dietConsistencyChart"></canvas>
+             <div id="diet-percent-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.5rem;">--</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background:var(--bg-alt);">
+        <div class="section-header" style="justify-content:space-between;">
+          <span class="section-title">📋 Raw Log Matrix</span>
+          <div style="display:flex; gap:10px; align-items:center;">
+             <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Filter by Day:</span>
+             <input type="date" id="matrix-date-filter" class="form-control" style="max-width:200px; padding:6px 10px; font-size:0.85rem;" onchange="filterMatrixByDate()">
+             <button class="btn btn-sm" style="background:var(--bg-lighter); color:var(--text-primary); border:1px solid var(--border);" onclick="document.getElementById('matrix-date-filter').value=''; filterMatrixByDate()">Clear</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table style="width:100%;font-size:0.85rem;">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Weight (kg)</th>
+                <th>BMI</th>
+                <th>Chest (cm)</th>
+                <th>Waist (cm)</th>
+                <th>Workout</th>
+                <th>Diet</th>
+                <th>Calories</th>
+                <th>Protein (g)</th>
+                <th>Carbs (g)</th>
+                <th>Fat (g)</th>
+              </tr>
+            </thead>
+            <tbody id="md-progress-matrix-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+
+<!-- ─────── ASSIGN PLAN MODAL ─────── -->
+<div class="modal-overlay" id="assign-plan-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <span class="modal-title">Bulk Assign Plan</span>
+      <button class="modal-close">✕</button>
+    </div>
+    <input type="hidden" id="assign-template-id">
+    <input type="hidden" id="assign-plan-type">
+    <p style="margin-bottom:15px; font-size:0.9rem; color:var(--text-secondary);">Select the members you want to assign this plan to. Note: This will replace their current plan.</p>
+    
+    <div style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:20px;">
+        {% for m in my_members %}
+        <label style="display:flex; align-items:center; gap:12px; padding:8px; cursor:pointer; border-bottom:1px solid var(--border-alt);">
+            <input type="checkbox" name="assign-members" value="{{ m.user.id }}" style="width:18px; height:18px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <img src="{{ m.get_profile_image }}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+                <div>
+                   <div style="font-weight:600; font-size:0.85rem;">{{ m.user.get_full_name|default:m.user.email }}</div>
+                   <div style="font-size:0.7rem; color:var(--text-muted);">{{ m.user.email }}</div>
+                </div>
+            </div>
+        </label>
+        {% endfor %}
+    </div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button class="btn btn-outline" onclick="selectAllMembers(true)">Select All</button>
+        <button class="btn btn-primary" onclick="confirmAssignment()">Confirm Assignment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALS ── -->
+<!-- Add Slot Modal -->
+<div class="modal-overlay" id="add-slot-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Available Slot</span><button class="modal-close">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Date</label><input type="date" id="slot-date"
+        class="form-control"></div>
+    <div class="grid-2" style="gap:12px;">
+      <div class="form-group"><label class="form-label">Start Time</label><input type="time" id="slot-start"
+          class="form-control"></div>
+      <div class="form-group"><label class="form-label">End Time</label><input type="time" id="slot-end"
+          class="form-control"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Title (optional)</label><input type="text" id="slot-title"
+        class="form-control" placeholder="e.g. Morning Yoga"></div>
+    <div class="form-group"><label class="form-label">Capacity</label><input type="number" id="slot-capacity"
+        class="form-control" value="1" min="1"></div>
+    <button class="btn btn-primary w-full" onclick="addSlot()" style="justify-content:center;">Add Slot</button>
+  </div>
+</div>
+
+<!-- Add Meal Modal -->
+<div class="modal-overlay" id="add-meal-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Meal</span><button class="modal-close">✕</button></div>
+    <div class="form-group"><label class="form-label">Meal Type</label>
+      <select id="meal-type" class="form-control">
+        <option value="breakfast">Breakfast</option>
+        <option value="lunch">Lunch</option>
+        <option value="dinner">Dinner</option>
+        <option value="snack">Snack</option>
+        <option value="pre_workout">Pre-Workout</option>
+        <option value="post_workout">Post-Workout</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Food Name</label><input type="text" id="meal-name"
+        class="form-control" placeholder="e.g. Greek Yogurt with Oats"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea id="meal-desc" class="form-control"
+        rows="2"></textarea></div>
+    <div class="grid-2" style="gap:12px;">
+      <div class="form-group"><label class="form-label">Calories</label><input type="number" id="meal-cal"
+          class="form-control"></div>
+      <div class="form-group"><label class="form-label">Protein (g)</label><input type="number" id="meal-protein"
+          class="form-control" step="0.1"></div>
+      <div class="form-group"><label class="form-label">Carbs (g)</label><input type="number" id="meal-carbs"
+          class="form-control" step="0.1"></div>
+      <div class="form-group"><label class="form-label">Fat (g)</label><input type="number" id="meal-fat"
+          class="form-control" step="0.1"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Food Image</label>
+      <div id="meal-image-picker"></div>
+      <input type="hidden" id="meal-image-url">
+    </div>
+
+    <button class="btn btn-primary w-full" onclick="addMeal()" style="justify-content:center;">Add Meal</button>
+  </div>
+</div>
+
+<!-- Add Exercise Modal -->
+<div class="modal-overlay" id="add-exercise-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Exercise</span><button class="modal-close">✕</button></div>
+    <div class="form-group"><label class="form-label">Exercise Name</label><input type="text" id="ex-name"
+        class="form-control" placeholder="e.g. Bench Press"></div>
+    <div class="grid-2" style="gap:12px;">
+      <div class="form-group"><label class="form-label">Day</label>
+        <select id="ex-day" class="form-control">
+          <option value="monday">Monday</option>
+          <option value="tuesday">Tuesday</option>
+          <option value="wednesday">Wednesday</option>
+          <option value="thursday">Thursday</option>
+          <option value="friday">Friday</option>
+          <option value="saturday">Saturday</option>
+          <option value="sunday">Sunday</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Sets</label><input type="number" id="ex-sets"
+          class="form-control" placeholder="e.g. 4"></div>
+    </div>
+    <div class="grid-2" style="gap:12px;">
+      <div class="form-group"><label class="form-label">Reps</label><input type="text" id="ex-reps" class="form-control"
+          placeholder="e.g. 10-12"></div>
+      <div class="form-group"><label class="form-label">Rest (sec)</label><input type="number" id="ex-rest"
+          class="form-control" placeholder="e.g. 60"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea id="ex-notes" class="form-control"
+        rows="2"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Video (YouTube URL or Upload)</label>
+      <div id="ex-video-picker"></div>
+      <input type="hidden" id="ex-video-url">
+    </div>
+    <button class="btn btn-primary w-full" onclick="addExercise()" style="justify-content:center;">Add Exercise</button>
+  </div>
+</div>
+
+<!-- Add Global Workout Modal -->
+<div class="modal-overlay" id="add-gw-modal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Add Global Class</span><button class="modal-close">✕</button>
+    </div>
+    <input type="hidden" id="gw-id">
+    <div class="form-group"><label class="form-label">Title</label><input type="text" id="gw-title" class="form-control"
+        placeholder="e.g. 30 Min HIIT"></div>
+    <div class="form-group"><label class="form-label">Category</label>
+      <input type="text" id="gw-category" class="form-control" value="{{ profile.speciality }}" readonly
+        style="opacity:0.75; cursor:not-allowed;"
+        title="Classes are automatically categorized under your speciality: {{ profile.speciality }}">
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><textarea id="gw-desc" class="form-control"
+        rows="2"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Video (YouTube URL or Upload)</label>
+      <div id="gw-video-picker"></div>
+      <input type="hidden" id="gw-video-url">
+    </div>
+    <button class="btn btn-primary w-full" onclick="addGlobalWorkout()" style="justify-content:center;">Upload
+      Class</button>
+  </div>
+</div>
+
+
+<!-- ─────────── MY PROFILE ─────────── -->
+<div class="portal-section" id="sec-profile">
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-header"><span class="section-title">👤 Public Profile</span></div>
+      <div style="text-align:center;margin-bottom:20px;">
+        <img src="{{ profile.get_profile_image }}" id="profile-img-preview"
+          style="width:120px;height:120px;border-radius:50%;border:4px solid var(--teal);object-fit:cover;">
+        <div id="profile-pic-picker" style="margin-top:12px;"></div>
+        <input type="hidden" id="profile-image-url" value="{{ profile.profile_image_url }}">
+      </div>
+      <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-control"
+          value="{{ user.get_full_name }}" readonly style="opacity:0.7;"></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="text" class="form-control"
+          value="{{ user.email }}" readonly style="opacity:0.7;"></div>
+      <div class="form-group"><label class="form-label">Speciality</label><input type="text" id="prof-speciality"
+          class="form-control" value="{{ profile.speciality }}" readonly style="opacity:0.75; cursor:not-allowed;"
+          title="Speciality can only be changed by an administrator."></div>
+    </div>
+    <div class="card">
+      <div class="section-header"><span class="section-title">⚙️ Profile Settings</span></div>
+      <div class="form-group"><label class="form-label">Phone Number</label><input type="text" id="prof-phone"
+          class="form-control" value="{{ profile.phone }}"></div>
+      <div class="form-group"><label class="form-label">Address</label><textarea id="prof-address" class="form-control"
+          rows="2">{{ profile.address }}</textarea></div>
+      <div class="form-group"><label class="form-label">Bio (Optional)</label><textarea id="prof-bio" class="form-control"
+          rows="3">{{ profile.bio }}</textarea></div>
+      <button class="btn btn-primary w-full" onclick="updateMyProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let staffCal, currentPlanId = null, currentMemberId = null, currentPlanType = 'diet';
+  window.pendingItems = [];
+
+  // --- TAB SWITCHING ---
+  function switchDietTab(tab, btn) {
+    document.querySelectorAll('#sec-diet .tab-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('diet-templates-view').style.display = tab === 'templates' ? 'block' : 'none';
+    document.getElementById('diet-active-view').style.display = tab === 'active' ? 'block' : 'none';
+    document.getElementById('diet-editor').style.display = 'none';
+  }
+
+  function switchWorkoutTab(tab, btn) {
+    document.querySelectorAll('#sec-workout .tab-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('workout-templates-view').style.display = tab === 'templates' ? 'block' : 'none';
+    document.getElementById('workout-active-view').style.display = tab === 'active' ? 'block' : 'none';
+    document.getElementById('workout-editor').style.display = 'none';
+  }
+
+  // --- EDITOR LIFT-OFF ---
+  function createNewDietTemplate() {
+    currentPlanType = 'diet';
+    currentMemberId = 0;
+    currentPlanId = null;
+    openPlanEditor('diet', { title: 'New Diet Template', is_template: true });
+  }
+
+  function createNewWorkoutTemplate() {
+    currentPlanType = 'workout';
+    currentMemberId = 0;
+    currentPlanId = null;
+    openPlanEditor('workout', { title: 'New Workout Template', is_template: true });
+  }
+
+  function editDietTemplate(id) {
+    currentPlanType = 'diet';
+    currentMemberId = 0;
+    currentPlanId = id;
+    fetchAndOpenEditor('diet', id);
+  }
+
+  function editWorkoutTemplate(id) {
+    currentPlanType = 'workout';
+    currentMemberId = 0;
+    currentPlanId = id;
+    fetchAndOpenEditor('workout', id);
+  }
+
+  function openMemberEditor(memberId, type) {
+    currentPlanType = type;
+    currentMemberId = memberId;
+    apiGet(`/portal/staff/member-data/${memberId}/`).then(d => {
+        if (d.message && !d.diet && !d.workout) {
+            showToast(d.message, 'error');
+            return;
+        }
+        const plan = type === 'diet' ? d.diet : d.workout;
+        if (plan && plan.id) {
+            currentPlanId = plan.id;
+            openPlanEditor(type, plan);
+        } else {
+            currentPlanId = null;
+            openPlanEditor(type, { title: 'Custom Plan for Member', is_template: false });
+        }
+    }).catch(err => {
+        showToast('Failed to load member data', 'error');
+    });
+  }
+
+  function fetchAndOpenEditor(type, planId) {
+      apiGet(`/portal/staff/plan-detail/${planId}/?type=${type}`).then(d => {
+          openPlanEditor(type, d.plan);
+      });
+  }
+
+
+  function openPlanEditor(type, data) {
+    currentPlanId = data.id || null;
+    currentPlanType = type;
+    window.pendingItems = (type === 'diet' ? (data.meals || []) : (data.exercises || [])).map(it => ({...it}));
+    
+    document.getElementById(`${type}-editor`).style.display = 'block';
+    document.getElementById(`${type}-templates-view`).style.display = 'none';
+    document.getElementById(`${type}-active-view`).style.display = 'none';
+    
+    document.getElementById(`${type}-title`).value = data.title || '';
+    document.getElementById(`${type}-notes`).value = data.notes || '';
+    if (type === 'diet') {
+        document.getElementById('diet-category').value = data.category || '';
+        renderWeeklyGrid('diet', window.pendingItems);
+    } else {
+        document.getElementById('workout-category').value = data.category || '';
+        renderWeeklyGrid('workout', window.pendingItems);
+    }
+    document.getElementById(`${type}-editor`).scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function closeDietEditor() {
+      document.getElementById('diet-editor').style.display = 'none';
+      document.getElementById('diet-templates-view').style.display = 'block';
+  }
+  function closeWorkoutEditor() {
+      document.getElementById('workout-editor').style.display = 'none';
+      document.getElementById('workout-templates-view').style.display = 'block';
+  }
+
+  function renderWeeklyGrid(type, items) {
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      days.forEach(day => {
+          const container = document.getElementById(`${type === 'diet' ? 'meals' : 'exercises'}-${day}`);
+          if (!container) return;
+          container.innerHTML = '';
+          const dayItems = items.filter(it => it.day === day);
+          dayItems.forEach(it => {
+              const card = document.createElement('div');
+              card.className = 'card';
+              card.style = 'padding:10px; font-size:0.8rem; border:1px solid var(--border-alt); background:var(--bg); margin-bottom:8px;';
+              if (type === 'diet') {
+                  const mealTypeLabel = (it.meal_type || '').split('_').join(' ').toUpperCase();
+                  card.innerHTML = `
+                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                          <strong>${mealTypeLabel}</strong>
+                          <button class="btn btn-sm" style="padding:0 4px;" onclick="deleteItem('${it.id}', 'diet')">✕</button>
+                      </div>
+                      <div style="margin:4px 0;">${it.name || ''}</div>
+                      <div style="color:var(--text-muted); font-size:0.75rem;">${it.calories || 0} kcal</div>
+                  `;
+              } else {
+                  card.innerHTML = `
+                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                          <strong>${it.name || ''}</strong>
+                          <button class="btn btn-sm" style="padding:0 4px;" onclick="deleteItem('${it.id}', 'workout')">✕</button>
+                      </div>
+                      <div style="color:var(--text-muted); font-size:0.75rem; margin-top:4px;">${it.sets || 0}x${it.reps || 0} | ${it.rest_seconds||0}s rest</div>
+                  `;
+              }
+              container.appendChild(card);
+          });
+          
+          const addBtn = document.createElement('button');
+          addBtn.className = 'btn btn-outline btn-sm w-full';
+          addBtn.style = 'border-style:dashed; margin-top:5px; font-size:0.75rem; padding:6px;';
+          addBtn.innerText = '+ Add';
+          addBtn.onclick = () => {
+              const modalId = type === 'diet' ? 'add-meal-modal' : 'add-exercise-modal';
+              if (type === 'workout') document.getElementById('ex-day').value = day;
+              window.activeDay = day;
+              openModal(modalId);
+          };
+          container.appendChild(addBtn);
+      });
+  }
+
+  function saveDietPlan() {
+      const data = {
+          title: document.getElementById('diet-title').value,
+          category: document.getElementById('diet-category').value,
+          notes: document.getElementById('diet-notes').value,
+          is_template: currentMemberId === 0,
+          plan_id: currentPlanId,
+          items: window.pendingItems
+      };
+      if (!data.title) { showToast('Please enter a plan title', 'error'); return Promise.resolve(); }
+      return apiPost(`/portal/staff/diet/${currentMemberId}/`, data).then(d => {
+          showToast(d.message, 'success');
+          if (d.plan_id) currentPlanId = d.plan_id;
+          location.reload(); // Reload to see changes in templates list
+          return d;
+      });
+  }
+
+  function saveWorkoutPlan() {
+      const data = {
+          title: document.getElementById('workout-title').value,
+          category: document.getElementById('workout-category').value,
+          notes: document.getElementById('workout-notes').value,
+          is_template: currentMemberId === 0,
+          plan_id: currentPlanId,
+          items: window.pendingItems
+      };
+      if (!data.title) { showToast('Please enter a plan title', 'error'); return Promise.resolve(); }
+      return apiPost(`/portal/staff/workout/${currentMemberId}/`, data).then(d => {
+          showToast(d.message, 'success');
+          if (d.plan_id) currentPlanId = d.plan_id;
+          location.reload();
+          return d;
+      });
+  }
+
+  function addMeal() {
+      const item = {
+          id: 'temp_' + Date.now(),
+          day: window.activeDay || 'monday',
+          meal_type: document.getElementById('meal-type').value,
+          name: document.getElementById('meal-name').value,
+          description: document.getElementById('meal-desc').value,
+          calories: document.getElementById('meal-cal').value,
+          protein_g: document.getElementById('meal-protein').value,
+          carbs_g: document.getElementById('meal-carbs').value,
+          fat_g: document.getElementById('meal-fat').value,
+          image_url: document.getElementById('meal-image-url').value
+      };
+
+      window.pendingItems.push(item);
+      renderWeeklyGrid('diet', window.pendingItems);
+      closeModal('add-meal-modal');
+  }
+
+  function addExercise() {
+      const item = {
+          id: 'temp_' + Date.now(),
+          day: document.getElementById('ex-day').value,
+          name: document.getElementById('ex-name').value,
+          sets: document.getElementById('ex-sets').value,
+          reps: document.getElementById('ex-reps').value,
+          rest_seconds: document.getElementById('ex-rest').value,
+          notes: document.getElementById('ex-notes').value,
+          video_url: document.getElementById('ex-video-url').value
+      };
+      window.pendingItems.push(item);
+      renderWeeklyGrid('workout', window.pendingItems);
+      closeModal('add-exercise-modal');
+  }
+
+  function deleteItem(id, type) {
+      window.pendingItems = window.pendingItems.filter(it => it.id != id);
+      renderWeeklyGrid(type, window.pendingItems);
+  }
+
+  function refreshCurrentEditor() {
+      if (currentPlanType === 'diet') {
+          if (currentMemberId === 0) editDietTemplate(currentPlanId);
+          else openMemberEditor(currentMemberId, 'diet');
+      } else {
+          if (currentMemberId === 0) editWorkoutTemplate(currentPlanId);
+          else openMemberEditor(currentMemberId, 'workout');
+      }
+  }
+
+  function copyDay(fromDay, type) {
+      const toDay = prompt(`Copy ${fromDay} items to which day? (tuesday, wednesday, thursday, friday, saturday, sunday, all)`, '');
+      if (!toDay) return;
+      const fromItems = window.pendingItems.filter(it => it.day === fromDay);
+      const targetDays = toDay === 'all' ? ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].filter(d => d !== fromDay) : [toDay];
+      
+      targetDays.forEach(day => {
+          fromItems.forEach(it => {
+              window.pendingItems.push({ ...it, id: 'temp_' + Date.now() + Math.random(), day: day });
+          });
+      });
+      renderWeeklyGrid(type, window.pendingItems);
+  }
+
+  function duplicatePlan(id, type) {
+      if (!confirm('Duplicate this template?')) return;
+      apiPost(`/portal/staff/duplicate-plan/${id}/`, { plan_type: type }).then(d => {
+          showToast(d.message, 'success');
+          setTimeout(() => location.reload(), 1000);
+      });
+  }
+
+  function deletePlan(id, type) {
+      if (!confirm('Permanently delete this template?')) return;
+      apiPost(`/portal/staff/delete-template/${id}/`, { type: type }).then(d => {
+          showToast(d.message, 'info');
+          setTimeout(() => location.reload(), 1000);
+      });
+  }
+
+  function openAssignModal(planId, type) {
+      document.getElementById('assign-template-id').value = planId;
+      document.getElementById('assign-plan-type').value = type;
+      openModal('assign-plan-modal');
+  }
+
+  function selectAllMembers(checked) {
+      document.querySelectorAll('input[name="assign-members"]').forEach(cb => cb.checked = checked);
+  }
+
+  function confirmAssignment() {
+      const planId = document.getElementById('assign-template-id').value;
+      const type = document.getElementById('assign-plan-type').value;
+      const members = Array.from(document.querySelectorAll('input[name="assign-members"]:checked')).map(cb => cb.value);
+      if (members.length === 0) { showToast('Select at least one member', 'error'); return; }
+      apiPost(`/portal/staff/assign-plan/${planId}/`, { plan_type: type, member_ids: members, template_id: planId }).then(d => {
+          showToast(d.message, 'success');
+          closeModal('assign-plan-modal');
+          setTimeout(() => location.reload(), 1000);
+      });
+  }
+
+  function viewMemberDashboard(memberId) {
+      document.querySelectorAll('.portal-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('sec-member-detail').classList.add('active');
+      
+      apiGet(`/portal/staff/member-data/${memberId}/`).then(d => {
+          document.getElementById('md-name').innerText = d.member_name || 'Member Details';
+          document.getElementById('md-email').innerText = d.member_email || '';
+          
+          // Diet
+          const dietInfo = document.getElementById('md-diet-info');
+          const mealsList = document.getElementById('md-meals-list');
+          const dietActions = document.getElementById('md-diet-actions');
+          
+          if (d.diet && d.diet.id) {
+              dietInfo.innerHTML = `<strong>${d.diet.title}</strong><div style="font-size:0.8rem; color:var(--text-muted);">Assigned ${d.diet.updated_at || ''}</div>`;
+              dietActions.innerHTML = '';
+              mealsList.innerHTML = d.diet.meals.map(m => `
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; background:rgba(0,0,0,0.1); border-radius:6px; margin-bottom:6px; font-size:0.85rem;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                          <span style="font-size:1.2rem;">${m.is_completed_today ? '✅' : '⏳'}</span>
+                          <div>
+                              <div style="font-weight:700;">${m.name}</div>
+                              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:capitalize;">${m.day} · ${m.meal_type}</div>
+                          </div>
+                      </div>
+                      <div style="font-weight:600; color:var(--teal-light);">${m.calories}k</div>
+                  </div>
+              `).join('');
+          } else {
+              dietInfo.innerText = 'No active diet plan.';
+              dietActions.innerHTML = '';
+              mealsList.innerHTML = '';
+          }
+
+          // Workout
+          const workoutInfo = document.getElementById('md-workout-info');
+          const exercisesList = document.getElementById('md-exercises-list');
+          const workoutActions = document.getElementById('md-workout-actions');
+
+          if (d.workout && d.workout.id) {
+              workoutInfo.innerHTML = `<strong>${d.workout.title}</strong><div style="font-size:0.8rem; color:var(--text-muted);">Assigned ${d.workout.updated_at || ''}</div>`;
+              workoutActions.innerHTML = '';
+              exercisesList.innerHTML = d.workout.exercises.map(e => `
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; background:rgba(0,0,0,0.1); border-radius:6px; margin-bottom:6px; font-size:0.85rem;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                          <span style="font-size:1.2rem;">${e.is_completed_today ? '✅' : '⏳'}</span>
+                          <div>
+                              <div style="font-weight:700;">${e.name}</div>
+                              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:capitalize;">${e.day} · ${e.sets}x${e.reps}</div>
+                          </div>
+                      </div>
+                  </div>
+              `).join('');
+          } else {
+              workoutInfo.innerText = 'No active workout plan.';
+              workoutActions.innerHTML = '';
+              exercisesList.innerHTML = '';
+          }
+
+          // Progress Logs
+          const progressBody = document.getElementById('md-progress-body');
+          progressBody.innerHTML = d.progress.map(p => `
+              <tr>
+                  <td>${p.date}</td>
+                  <td style="font-weight:700; color:var(--teal-light);">${p.weight_kg}kg</td>
+                  <td style="font-weight:700; color:var(--teal-light);">${p.height_cm || '—'}cm</td>
+                  <td style="font-size:0.8rem; color:var(--text-muted);">${p.notes || '—'}</td>
+              </tr>
+          `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No logs yet.</td></tr>';
+      });
+  }
+
+  function goToProgressTab(memberId) {
+      document.querySelector('[data-section="sec-progress"]').click();
+      document.getElementById('progress-member-select').value = memberId;
+      loadProgressDashboard(memberId);
+  }
+
+  function loadProgressDashboard(memberId) {
+      if (!memberId) {
+          document.getElementById('progress-dashboard').style.display = 'none';
+          return;
+      }
+      apiGet(`/portal/staff/member-data/${memberId}/`).then(d => {
+          document.getElementById('progress-dashboard').style.display = 'block';
+
+          // 1. Render Smart Insights
+          const insightsContainer = document.getElementById('prog-insights-container');
+          insightsContainer.innerHTML = '';
+          if (d.insights && d.insights.length > 0) {
+              d.insights.forEach(ins => {
+                  let bgColor = 'rgba(245, 158, 11, 0.1)';
+                  let color = '#f59e0b';
+                  let icon = '💡';
+                  if (ins.type === 'streak') { bgColor = 'rgba(16, 185, 129, 0.1)'; color = '#10b981'; icon = '🔥'; }
+                  if (ins.type === 'plateau') { bgColor = 'rgba(239, 68, 68, 0.1)'; color = '#ef4444'; icon = '⚠️'; }
+                  
+                  insightsContainer.innerHTML += `
+                      <div style="background:${bgColor}; color:${color}; border:1px solid ${color}; padding:10px 15px; border-radius:6px; font-weight:600; font-size:0.9rem;">
+                          ${icon} ${ins.text}
+                      </div>
+                  `;
+              });
+          }
+
+          if (d.advanced_metrics && Object.keys(d.advanced_metrics).length > 0) {
+              const am = d.advanced_metrics;
+              document.getElementById('prog-bmi').innerText = am.current_bmi || '--';
+              document.getElementById('prog-bmi-sub').innerText = `Initial: ${am.initial_bmi || '--'}`;
+              
+              const wd = am.weight_delta;
+              document.getElementById('prog-weight').innerText = wd ? (wd > 0 ? `+${wd}kg` : `${wd}kg`) : '--';
+              document.getElementById('prog-weight').style.color = wd && wd < 0 ? '#10b981' : (wd > 0 ? '#ef4444' : 'inherit');
+              
+              // 2. Goal Progress Bar Handling
+              const goalCont = document.getElementById('prog-goal-container');
+              if (d.target_weight_kg && am.initial_weight && am.current_weight) {
+                  const current = parseFloat(am.current_weight);
+                  const initial = parseFloat(am.initial_weight);
+                  const target = parseFloat(d.target_weight_kg);
+                  
+                  goalCont.style.display = 'block';
+                  
+                  let totalToLose = initial - target;
+                  let lostSoFar = initial - current;
+                  
+                  // if weight gain goal
+                  if (target > initial) {
+                      totalToLose = target - initial;
+                      lostSoFar = current - initial;
+                  }
+                  
+                  let pct = 0;
+                  if (totalToLose > 0) pct = Math.max(0, Math.min(100, (lostSoFar / totalToLose) * 100));
+                  
+                  document.getElementById('prog-goal-text').innerText = `${Math.round(pct)}%`;
+                  document.getElementById('prog-goal-bar').style.width = `${pct}%`;
+              } else {
+                  goalCont.style.display = 'none';
+              }
+              
+              const wad = am.waist_delta;
+              document.getElementById('prog-waist').innerText = wad ? (wad > 0 ? `+${wad}cm` : `${wad}cm`) : '--';
+              document.getElementById('prog-waist').style.color = wad && wad < 0 ? '#10b981' : 'inherit';
+              
+              const cd = am.chest_delta;
+              document.getElementById('prog-chest').innerText = cd ? (cd > 0 ? `+${cd}cm` : `${cd}cm`) : '--';
+              document.getElementById('prog-chest').style.color = cd && cd > 0 ? '#10b981' : 'inherit';
+          } else {
+              document.getElementById('prog-bmi').innerText = '--';
+              document.getElementById('prog-weight').innerText = '--';
+              document.getElementById('prog-waist').innerText = '--';
+              document.getElementById('prog-chest').innerText = '--';
+              document.getElementById('prog-goal-container').style.display = 'none';
+          }
+
+          const matrixBody = document.getElementById('md-progress-matrix-body');
+          let macroMap = {};
+          if (d.macro_history) d.macro_history.forEach(m => { macroMap[m.date] = m; });
+
+          if (d.progress && d.progress.length > 0) {
+             matrixBody.innerHTML = d.progress.map(p => {
+                 let m = macroMap[p.date] || {};
+                 let bmi = p.weight_kg && p.height_cm ? (p.weight_kg / Math.pow(p.height_cm/100, 2)).toFixed(1) : '--';
+                 let wStatus = p.workout_status ? '<span style="color:#10b981;">✅</span>' : '<span style="color:#ef4444;">❌</span>';
+                 let dStatus = p.diet_status ? '<span style="color:#10b981;">✅</span>' : '<span style="color:#ef4444;">❌</span>';
+                 return `
+                     <tr>
+                         <td>${p.date}</td>
+                         <td style="font-weight:700;">${p.weight_kg || '--'}</td>
+                         <td>${bmi}</td>
+                         <td>${p.chest_cm || '--'}</td>
+                         <td>${p.waist_cm || '--'}</td>
+                         <td style="text-align:center;">${wStatus}</td>
+                         <td style="text-align:center;">${dStatus}</td>
+                         <td style="color:var(--teal-light);">${m.total_cals || '--'}</td>
+                         <td>${m.total_protein || '--'}</td>
+                         <td>${m.total_carbs || '--'}</td>
+                         <td>${m.total_fat || '--'}</td>
+                     </tr>
+                 `;
+             }).join('');
+          } else {
+             matrixBody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px; color:var(--text-muted);">No logs yet.</td></tr>';
+          }
+          renderCharts(d.progress, d.macro_history || [], d.consistency || {diet: 0, workout: 0});
+      });
+  }
+
+  let currentWeightChart = null;
+  let currentMacroChart = null;
+  let currentWorkoutPie = null;
+  let currentDietPie = null;
+
+  function renderCharts(progress, macros, consistency) {
+      if(currentWeightChart) currentWeightChart.destroy();
+      if(currentMacroChart) currentMacroChart.destroy();
+      if(currentWorkoutPie) currentWorkoutPie.destroy();
+      if(currentDietPie) currentDietPie.destroy();
+
+      const weightLabels = progress.map(p => p.date).reverse();
+      const weightData = progress.map(p => p.weight_kg).reverse();
+      
+      const ctxWeight = document.getElementById('weightChart').getContext('2d');
+      currentWeightChart = new Chart(ctxWeight, {
+          type: 'line',
+          data: {
+              labels: weightLabels,
+              datasets: [{
+                  label: 'Weight (kg)',
+                  data: weightData,
+                  borderColor: '#0d9488',
+                  backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                  tension: 0.3, fill: true
+              }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      const macroDates = macros.map(m => m.date);
+      const ctxMacro = document.getElementById('macroChart').getContext('2d');
+      currentMacroChart = new Chart(ctxMacro, {
+          type: 'bar',
+          data: {
+              labels: macroDates,
+              datasets: [
+                  { label: 'Protein (g)', data: macros.map(m => m.total_protein), backgroundColor: '#10b981' },
+                  { label: 'Carbs (g)', data: macros.map(m => m.total_carbs), backgroundColor: '#f59e0b' },
+                  { label: 'Fat (g)', data: macros.map(m => m.total_fat), backgroundColor: '#ef4444' }
+              ]
+          },
+          options: {
+              responsive: true, maintainAspectRatio: false,
+              scales: { x: { stacked: true }, y: { stacked: true } }
+          }
+      });
+      
+      // Consistency Charts
+      document.getElementById('workout-percent-text').innerText = consistency.workout + '%';
+      document.getElementById('diet-percent-text').innerText = consistency.diet + '%';
+      
+      const ctxWork = document.getElementById('workoutConsistencyChart').getContext('2d');
+      currentWorkoutPie = new Chart(ctxWork, {
+          type: 'doughnut',
+          data: {
+              labels: ['Completed', 'Missed'],
+              datasets: [{
+                  data: [consistency.workout, 100 - consistency.workout],
+                  backgroundColor: ['#0d9488', 'rgba(255,255,255,0.05)'],
+                  borderWidth: 0
+              }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
+      });
+      
+      const ctxDiet = document.getElementById('dietConsistencyChart').getContext('2d');
+      currentDietPie = new Chart(ctxDiet, {
+          type: 'doughnut',
+          data: {
+              labels: ['Followed', 'Missed'],
+              datasets: [{
+                  data: [consistency.diet, 100 - consistency.diet],
+                  backgroundColor: ['#10b981', 'rgba(255,255,255,0.05)'],
+                  borderWidth: 0
+              }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initMediaInput({ containerId: 'meal-image-picker', urlFieldId: 'meal-image-url', cloudName: CLOUDINARY_CLOUD, uploadPreset: CLOUDINARY_PRESET, type: 'image' });
+    initMediaInput({ containerId: 'ex-video-picker', urlFieldId: 'ex-video-url', cloudName: CLOUDINARY_CLOUD, uploadPreset: CLOUDINARY_PRESET, type: 'video' });
+
+    initMediaInput({ containerId: 'gw-video-picker', urlFieldId: 'gw-video-url', cloudName: CLOUDINARY_CLOUD, uploadPreset: CLOUDINARY_PRESET, type: 'video' });
+    
+    initMediaInput({
+      containerId: 'profile-pic-picker',
+      urlFieldId: 'profile-image-url',
+      cloudName: CLOUDINARY_CLOUD,
+      uploadPreset: CLOUDINARY_PRESET,
+      type: 'image',
+      callback: (url) => { document.getElementById('profile-img-preview').src = url; }
+    });
+
+    const calEl = document.getElementById('staff-calendar');
+    if (calEl) {
+      staffCal = new FullCalendar.Calendar(calEl, {
+        initialView: 'timeGridWeek',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+        height: 'auto',
+        events: '/portal/staff/slots/',
+        eventClick(info) {
+          if (confirm(`Delete slot "${info.event.title}"?`)) {
+            apiPost(`/portal/staff/slots/delete/${info.event.id}/`, {}).then(d => {
+              showToast(d.message, 'info'); staffCal.refetchEvents();
+            });
+          }
+        }
+      });
+      staffCal.render();
+    }
+  });
+
+  function addSlot() {
+    const data = {
+      date: document.getElementById('slot-date').value,
+      start_time: document.getElementById('slot-start').value,
+      end_time: document.getElementById('slot-end').value,
+      title: document.getElementById('slot-title').value,
+      capacity: parseInt(document.getElementById('slot-capacity').value) || 1
+    };
+    if (!data.date || !data.start_time || !data.end_time) { showToast('Fill date and times', 'error'); return; }
+    apiPost('/portal/staff/slots/add/', data).then(d => {
+      showToast(d.message, d.id ? 'success' : 'error');
+      if (d.id) { closeModal('add-slot-modal'); staffCal?.refetchEvents(); }
+    });
+  }
+
+  function updateMyProfile() {
+    const data = {
+      phone: document.getElementById('prof-phone').value,
+      address: document.getElementById('prof-address').value,
+      bio: document.getElementById('prof-bio').value,
+      speciality: document.getElementById('prof-speciality').value,
+      profile_image_url: document.getElementById('profile-image-url').value
+    };
+    apiPost('/api/update-profile/', data).then(d => {
+      showToast(d.message, 'success');
+      if (d.message.includes('success')) setTimeout(() => location.reload(), 1500);
+    });
+  }
+
+  function editGlobalWorkoutBtn(btn) {
+    const id = btn.getAttribute('data-id');
+    const title = btn.getAttribute('data-title');
+    const desc = btn.getAttribute('data-desc');
+    const video = btn.getAttribute('data-video');
+    
+    document.getElementById('gw-id').value = id;
+    document.getElementById('gw-title').value = title;
+    document.getElementById('gw-desc').value = desc;
+    document.getElementById('gw-video-url').value = video;
+    renderMediaPreview(video, 'video', 'gw-video-picker-preview');
+    openModal('add-gw-modal');
+  }
+
+  function addGlobalWorkout() {
+    const data = {
+      id: document.getElementById('gw-id').value || null,
+      title: document.getElementById('gw-title').value,
+      category: document.getElementById('gw-category').value,
+      description: document.getElementById('gw-desc').value,
+      video_url: document.getElementById('gw-video-url').value,
+    };
+    if (!data.title) { showToast('Title is required', 'error'); return; }
+    apiPost('/portal/staff/global-workout/', data).then(d => {
+      showToast(d.message, 'success');
+      if (d.id) { closeModal('add-gw-modal'); setTimeout(() => location.reload(), 1000); }
+    });
+  }
+
+  function deleteGlobalWorkout(id) {
+    if (!confirm('Delete this class?')) return;
+    apiPost(`/portal/staff/global-workout/delete/${id}/`, {}).then(d => {
+      showToast(d.message, 'info'); location.reload();
+    });
+  }
+
+  function removeMemberPlan(memberId, type) {
+      if (!confirm(`Are you sure you want to remove this ${type} plan? This will also remove any customization.`)) return;
+      apiPost(`/portal/staff/remove-plan/${memberId}/`, { plan_type: type }).then(d => {
+          showToast(d.message, 'success');
+          viewMemberDashboard(memberId);
+      });
+  }
+
+  function filterMatrixByDate() {
+      const filterVal = document.getElementById('matrix-date-filter').value;
+      const rows = document.querySelectorAll('#md-progress-matrix-body tr');
+      rows.forEach(r => {
+          if (!filterVal) {
+              r.style.display = '';
+              return;
+          }
+          const tdDate = r.querySelector('td:first-child');
+          if (tdDate) {
+              if (tdDate.innerText.trim() === filterVal) {
+                  r.style.display = '';
+              } else {
+                  r.style.display = 'none';
+              }
+          }
+      });
+  }
+
+</script>
+{% endblock %}
