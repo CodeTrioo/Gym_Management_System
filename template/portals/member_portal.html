@@ -1,12 +1,13 @@
 {% extends 'portals/base_portal.html' %}
 {% load static %}
 
-{% block title %}Member Portal — GymPro{% endblock %}
+{% block title %}Member Portal — Almost Fit{% endblock %}
 {% block portal_name %}Member Portal{% endblock %}
 {% block default_title %}My Dashboard{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
+<link rel="stylesheet" href="{% static 'Css/member-progress.css' %}">
 <style>
 .expiry-ring{width:120px;height:120px;position:relative;margin:0 auto 16px;}
 .expiry-ring svg{transform:rotate(-90deg);}
@@ -30,61 +31,61 @@
 <div class="nav-section-label">Main</div>
 {% if 'dashboard' in allowed_tabs %}
 <div class="nav-item active" data-section="sec-dashboard" data-title="My Dashboard" data-subtitle="Welcome back!">
-  <span class="nav-icon">🏠</span> Dashboard
+  <span class="nav-icon" aria-hidden="true"></span> Dashboard
 </div>
 {% endif %}
 {% if 'booking' in allowed_tabs %}
 <div class="nav-item" data-section="sec-booking" data-title="Book a Session" data-subtitle="Reserve your training slot">
-  <span class="nav-icon">📅</span> Book Session
+  <span class="nav-icon" aria-hidden="true"></span> Book Session
 </div>
 {% endif %}
 {% if 'diet' in allowed_tabs %}
 <div class="nav-item" data-section="sec-diet" data-title="My Diet Plan" data-subtitle="Nutrition by your trainer">
-  <span class="nav-icon">🥗</span> Diet Plan
+  <span class="nav-icon" aria-hidden="true"></span> Diet Plan
 </div>
 {% endif %}
 {% if 'workout' in allowed_tabs %}
 <div class="nav-item" data-section="sec-workout" data-title="My Workout Plan" data-subtitle="Training schedule">
-  <span class="nav-icon">💪</span> Workout Plan
+  <span class="nav-icon" aria-hidden="true"></span> Workout Plan
 </div>
 {% endif %}
 {% if 'global_workout' in allowed_tabs %}
 <div class="nav-item" data-section="sec-global-workout" data-title="Workout Library" data-subtitle="Explore training programs">
-  <span class="nav-icon">🌍</span> Workout Library
+  <span class="nav-icon" aria-hidden="true"></span> Workout Library
 </div>
 {% endif %}
 
 <div class="nav-section-label">Health Tracking</div>
 {% if 'checklist' in allowed_tabs %}
 <div class="nav-item" data-section="sec-checklist" data-title="Daily Checklist" data-subtitle="Your goals for today">
-  <span class="nav-icon">🚀</span> Daily Checklist
+  <span class="nav-icon" aria-hidden="true"></span> Daily Checklist
 </div>
 {% endif %}
 {% if 'progress' in allowed_tabs %}
 <div class="nav-item" data-section="sec-progress" data-title="Progress Tracker" data-subtitle="Your transformation dashboard">
-  <span class="nav-icon">📈</span> My Progress
+  <span class="nav-icon" aria-hidden="true"></span> My Progress
 </div>
 {% endif %}
 {% if 'bmi' in allowed_tabs %}
 <div class="nav-item" data-section="sec-bmi" data-title="BMI Calculator" data-subtitle="Know your health metrics">
-  <span class="nav-icon">⚖️</span> BMI Calculator
+  <span class="nav-icon" aria-hidden="true"></span> BMI Calculator
 </div>
 {% endif %}
 {% if 'nutrient' in allowed_tabs %}
 <div class="nav-item" data-section="sec-nutrient" data-title="Nutrient Calculator" data-subtitle="Lookup food nutrition facts">
-  <span class="nav-icon">🍎</span> Nutrient Calc
+  <span class="nav-icon" aria-hidden="true"></span> Nutrient Calc
 </div>
 {% endif %}
 
 <div class="nav-section-label">Account</div>
 {% if 'payments' in allowed_tabs %}
 <div class="nav-item" data-section="sec-payments" data-title="Payment History" data-subtitle="Your transactions">
-  <span class="nav-icon">💳</span> Payments
+  <span class="nav-icon" aria-hidden="true"></span> Payments
 </div>
 {% endif %}
 {% if 'profile' in allowed_tabs %}
 <div class="nav-item" data-section="sec-profile" data-title="My Profile" data-subtitle="Manage your settings">
-  <span class="nav-icon">👤</span> My Profile
+  <span class="nav-icon" aria-hidden="true"></span> My Profile
 </div>
 {% endif %}
 {% endblock %}
@@ -95,26 +96,26 @@
 {% if enrollment %}
   {% if enrollment.is_expired %}
   <div class="expiry-banner">
-    <span style="font-size:1.5rem;">🚨</span>
+    <span class="expiry-banner-mark" aria-hidden="true"></span>
     <div style="flex:1;">
-      <strong>Membership Expired</strong> — Your membership expired on {{ enrollment.end_date|date:"M d, Y" }}.
+      <strong>Membership expired</strong> — Your membership ended on {{ enrollment.end_date|date:"M d, Y" }}.
     </div>
-    <a href="#plans" class="btn btn-danger btn-sm" onclick="document.querySelector('[data-section=sec-payments]').click()">⚡ Renew with eSewa →</a>
+    <a href="#plans" class="btn btn-danger btn-sm" onclick="document.querySelector('[data-section=sec-payments]').click()">Renew with eSewa</a>
   </div>
   {% elif enrollment.is_expiring_soon %}
   <div class="expiry-banner warning">
-    <span style="font-size:1.5rem;">⚠️</span>
+    <span class="expiry-banner-mark" aria-hidden="true"></span>
     <div style="flex:1;">
-      <strong>Expiring Soon</strong> — Your membership expires in <strong>{{ enrollment.days_remaining }} day{{ enrollment.days_remaining|pluralize }}</strong>.
+      <strong>Expiring soon</strong> — Your membership expires in <strong>{{ enrollment.days_remaining }} day{{ enrollment.days_remaining|pluralize }}</strong>.
     </div>
-    <a href="/payments/pay/{{ enrollment.plan.id }}/" class="btn btn-gold btn-sm">⚡ Renew with eSewa →</a>
+    <a href="/payments/pay/{{ enrollment.plan.id }}/" class="btn btn-gold btn-sm">Renew with eSewa</a>
   </div>
   {% endif %}
 {% else %}
-<div class="expiry-banner">
-  <span style="font-size:1.5rem;">💡</span>
-  <div style="flex:1;"><strong>No active membership</strong> — Choose a plan and get started!</div>
-  <a href="/#plans" class="btn btn-gold btn-sm">View Plans →</a>
+<div class="expiry-banner expiry-banner--info">
+  <span class="expiry-banner-mark" aria-hidden="true"></span>
+  <div style="flex:1;"><strong>No active membership</strong> — Choose a plan to get started.</div>
+  <a href="/#plans" class="btn btn-gold btn-sm">View plans</a>
 </div>
 {% endif %}
 
@@ -196,7 +197,7 @@
   <div class="expiry-banner" style="background: linear-gradient(90deg, #0d9488, #14b8a6); border-color: #5eead4; color: #fff; margin-bottom: 24px;">
     <span style="font-size:1.5rem;">🧑‍🏫</span>
     <div style="flex:1;">
-      <strong>Welcome to GymPro!</strong> — You haven't chosen a trainer yet. Select an expert to get your custom plans.
+      <strong>Welcome to Almost Fit!</strong> — You haven't chosen a trainer yet. Select an expert to get your custom plans.
     </div>
     <a href="{% url 'select_trainer_view' %}" class="btn btn-sm" style="background: #fff; color: #0d9488; font-weight: 700;">Choose Your Trainer →</a>
   </div>
@@ -362,99 +363,92 @@
 {% if 'progress' in allowed_tabs %}
 <!-- ─────────── MY PROGRESS DASHBOARD ─────────── -->
 <div class="portal-section" id="sec-progress">
-    <!-- Smart Insights Banners -->
-    <div id="prog-insights-container" style="margin-bottom:24px; display:flex; flex-direction:column; gap:12px;">
+    <div id="prog-insights-container" class="mp-insights">
         {% for ins in stats.insights %}
-        <div style="background:{% if ins.type == 'streak' %}rgba(16, 185, 129, 0.1){% elif ins.type == 'plateau' %}rgba(239, 68, 68, 0.1){% else %}rgba(245, 158, 11, 0.1){% endif %}; 
-                    color:{% if ins.type == 'streak' %}#10b981{% elif ins.type == 'plateau' %}#ef4444{% else %}#f59e0b{% endif %}; 
-                    border:1px solid currentColor; padding:12px 20px; border-radius:12px; font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:12px;">
-            <span>{% if ins.type == 'streak' %}🔥{% elif ins.type == 'plateau' %}⚠️{% else %}💡{% endif %}</span>
-            {{ ins.text }}
+        <div class="mp-insight {% if ins.type == 'streak' %}mp-insight--streak{% elif ins.type == 'plateau' %}mp-insight--plateau{% else %}mp-insight--info{% endif %}">
+            <span class="mp-insight__icon" aria-hidden="true">{% if ins.type == 'streak' %}🔥{% elif ins.type == 'plateau' %}⚠{% else %}💡{% endif %}</span>
+            <span>{{ ins.text }}</span>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid-4" style="gap:20px; margin-bottom:24px;">
-        <div class="card" style="text-align:center; background:linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal);">
-            <div style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Current BMI</div>
-            <div style="font-size:2rem; font-weight:800; color:var(--teal-light);">{{ stats.advanced_metrics.current_bmi|default:"--" }}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Initial: {{ stats.advanced_metrics.initial_bmi|default:"--" }}</div>
+    <div class="mp-stat-grid">
+        <div class="card mp-stat-card">
+            <div class="mp-stat-kicker">Current BMI</div>
+            <div class="mp-stat-value">{{ stats.advanced_metrics.current_bmi|default:"--" }}</div>
+            <div class="mp-stat-meta">Initial: {{ stats.advanced_metrics.initial_bmi|default:"--" }}</div>
         </div>
-        <div class="card" style="text-align:center; background:linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal);">
-            <div style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Weight Change</div>
-            <div style="font-size:2rem; font-weight:800; color:{% if stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta < 0 %}#10b981{% elif stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta > 0 %}#f43f5e{% else %}var(--text-primary){% endif %};">
-                {% if stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.weight_delta|default:"0" }}kg
+        <div class="card mp-stat-card">
+            <div class="mp-stat-kicker">Weight change</div>
+            <div class="mp-stat-value {% if stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta < 0 %}mp-stat-value--good{% elif stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta > 0 %}mp-stat-value--warn{% else %}mp-stat-value--neutral{% endif %}">
+                {% if stats.advanced_metrics.weight_delta and stats.advanced_metrics.weight_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.weight_delta|default:"0" }} kg
             </div>
             {% if stats.target_weight_kg %}
-            <div style="margin-top:12px; background:rgba(0,0,0,0.2); padding:8px; border-radius:8px; text-align:left;">
-                <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:4px;">
-                    <span style="color:var(--text-muted);">Goal Progress</span>
+            <div class="mp-goal-block">
+                <div class="mp-goal-block__row">
+                    <span>Goal progress</span>
                     <strong id="dashboard-goal-percent">0%</strong>
                 </div>
-                <div class="macro-bar" style="height:6px; margin-top:0;">
-                    <div id="dashboard-goal-fill" class="macro-fill" style="width:0%; background:var(--gold);"></div>
+                <div class="mp-goal-bar">
+                    <div id="dashboard-goal-fill" class="mp-goal-bar__fill" style="width:0%;"></div>
                 </div>
             </div>
             {% endif %}
         </div>
-        <div class="card" style="text-align:center; background:linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal);">
-            <div style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Waist Change</div>
-            <div style="font-size:1.8rem; font-weight:800; color:{% if stats.advanced_metrics.waist_delta and stats.advanced_metrics.waist_delta < 0 %}#10b981{% else %}var(--text-primary){% endif %};">
-                {% if stats.advanced_metrics.waist_delta and stats.advanced_metrics.waist_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.waist_delta|default:"0" }}cm
+        <div class="card mp-stat-card">
+            <div class="mp-stat-kicker">Waist change</div>
+            <div class="mp-stat-value {% if stats.advanced_metrics.waist_delta and stats.advanced_metrics.waist_delta < 0 %}mp-stat-value--good{% else %}mp-stat-value--neutral{% endif %}">
+                {% if stats.advanced_metrics.waist_delta and stats.advanced_metrics.waist_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.waist_delta|default:"0" }} cm
             </div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Initial: {{ stats.advanced_metrics.initial_waist|default:"--" }}cm</div>
+            <div class="mp-stat-meta">Initial: {{ stats.advanced_metrics.initial_waist|default:"--" }} cm</div>
         </div>
-        <div class="card" style="text-align:center; background:linear-gradient(145deg, var(--bg-dark), var(--bg-alt)); border:1px solid var(--border-teal);">
-            <div style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Chest Change</div>
-            <div style="font-size:1.8rem; font-weight:800; color:{% if stats.advanced_metrics.chest_delta and stats.advanced_metrics.chest_delta > 0 %}#10b981{% else %}var(--text-primary){% endif %};">
-                {% if stats.advanced_metrics.chest_delta and stats.advanced_metrics.chest_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.chest_delta|default:"0" }}cm
+        <div class="card mp-stat-card">
+            <div class="mp-stat-kicker">Chest change</div>
+            <div class="mp-stat-value {% if stats.advanced_metrics.chest_delta and stats.advanced_metrics.chest_delta > 0 %}mp-stat-value--good{% else %}mp-stat-value--neutral{% endif %}">
+                {% if stats.advanced_metrics.chest_delta and stats.advanced_metrics.chest_delta > 0 %}+{% endif %}{{ stats.advanced_metrics.chest_delta|default:"0" }} cm
             </div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Initial: {{ stats.advanced_metrics.initial_chest|default:"--" }}cm</div>
+            <div class="mp-stat-meta">Initial: {{ stats.advanced_metrics.initial_chest|default:"--" }} cm</div>
         </div>
     </div>
 
-    <!-- Charts -->
-    <div class="grid-2" style="gap:24px; margin-bottom:24px;">
-        <div class="card">
-            <div class="section-header"><span class="section-title">📉 Weight Trend (30 Days)</span></div>
-            <div style="height:300px;"><canvas id="memberWeightChart"></canvas></div>
+    <div class="mp-chart-grid">
+        <div class="card mp-chart-card">
+            <div class="section-header"><span class="section-title">Weight trend · 30 days</span></div>
+            <div class="mp-chart-canvas"><canvas id="memberWeightChart"></canvas></div>
         </div>
-        <div class="card">
-            <div class="section-header"><span class="section-title">🍽️ Macro History (30 Days)</span></div>
-            <div style="height:300px;"><canvas id="memberMacroChart"></canvas></div>
+        <div class="card mp-chart-card">
+            <div class="section-header"><span class="section-title">Macro history · 30 days</span></div>
+            <div class="mp-chart-canvas"><canvas id="memberMacroChart"></canvas></div>
         </div>
     </div>
 
-    <!-- Consistency Charts -->
-    <div class="grid-2" style="gap:24px; margin-bottom:24px;">
-        <div class="card" style="display:flex; flex-direction:column; align-items:center;">
-          <div class="section-header" style="width:100%"><span class="section-title">💪 Workout Consistency</span></div>
-          <div style="height:200px; width:200px; position:relative;">
+    <div class="mp-consistency-grid">
+        <div class="card mp-consistency-card">
+          <div class="section-header"><span class="section-title">Workout consistency</span></div>
+          <div class="mp-donut-wrap">
               <canvas id="memberWorkoutConsistencyChart"></canvas>
-              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.8rem; color:var(--text-primary);">{{ stats.consistency.workout }}%</div>
+              <div class="mp-donut-center">{{ stats.consistency.workout }}%</div>
           </div>
         </div>
-        <div class="card" style="display:flex; flex-direction:column; align-items:center;">
-          <div class="section-header" style="width:100%"><span class="section-title">🥗 Diet Consistency</span></div>
-          <div style="height:200px; width:200px; position:relative;">
+        <div class="card mp-consistency-card">
+          <div class="section-header"><span class="section-title">Diet consistency</span></div>
+          <div class="mp-donut-wrap">
               <canvas id="memberDietConsistencyChart"></canvas>
-              <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-weight:800; font-size:1.8rem; color:var(--text-primary);">{{ stats.consistency.diet }}%</div>
+              <div class="mp-donut-center">{{ stats.consistency.diet }}%</div>
           </div>
         </div>
     </div>
 
-    <!-- Raw Matrix -->
-    <div class="card">
-        <div class="section-header" style="justify-content:space-between;">
-          <span class="section-title">📋 Raw Log Matrix</span>
-          <div style="display:flex; gap:10px; align-items:center;">
-             <input type="date" id="member-matrix-filter" class="form-control" style="max-width:200px;" onchange="filterMemberMatrix()">
-             <button class="btn btn-outline btn-sm" onclick="document.getElementById('member-matrix-filter').value=''; filterMemberMatrix()">Clear</button>
+    <div class="card mp-matrix-card">
+        <div class="section-header">
+          <span class="section-title">Raw log matrix</span>
+          <div class="mp-matrix-toolbar">
+             <input type="date" id="member-matrix-filter" class="form-control" onchange="filterMemberMatrix()">
+             <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('member-matrix-filter').value=''; filterMemberMatrix()">Clear</button>
           </div>
         </div>
         <div class="table-wrapper">
-          <table style="width:100%;">
+          <table>
             <thead>
               <tr>
                 <th>Date</th>
@@ -471,22 +465,22 @@
                 {% for log in stats.raw_logs %}
                 <tr data-date="{{ log.date|date:'Y-m-d' }}">
                     <td>{{ log.date|date:"M d, Y" }}</td>
-                    <td style="font-weight:700; color:var(--teal-light);">{{ log.weight_kg|default:"--" }}</td>
+                    <td class="mp-cell-weight">{{ log.weight_kg|default:"--" }}</td>
                     <td>{{ log.chest_cm|default:"--" }}</td>
                     <td>{{ log.waist_cm|default:"--" }}</td>
-                    <td style="text-align:center;">{% if log.workout_status %}<span style="color:#10b981;">✅</span>{% else %}<span style="color:#ef4444;">❌</span>{% endif %}</td>
-                    <td style="text-align:center;">{% if log.diet_status %}<span style="color:#10b981;">✅</span>{% else %}<span style="color:#ef4444;">❌</span>{% endif %}</td>
-                    <td style="color:var(--gold);">
+                    <td style="text-align:center;">{% if log.workout_status %}<span class="mp-badge mp-badge--ok">On</span>{% else %}<span class="mp-badge mp-badge--miss">Off</span>{% endif %}</td>
+                    <td style="text-align:center;">{% if log.diet_status %}<span class="mp-badge mp-badge--ok">On</span>{% else %}<span class="mp-badge mp-badge--miss">Off</span>{% endif %}</td>
+                    <td class="mp-cell-cals">
                         {% for m in stats.macro_history %}{% if m.date == log.date %}{{ m.total_cals|floatformat:0 }}{% endif %}{% endfor %}
                     </td>
-                    <td style="font-size:0.75rem; color:var(--text-muted);">
+                    <td class="mp-cell-macros">
                         {% for m in stats.macro_history %}{% if m.date == log.date %}
-                            P: {{ m.total_protein|floatformat:0 }}g | C: {{ m.total_carbs|floatformat:0 }}g | F: {{ m.total_fat|floatformat:0 }}g
+                            P {{ m.total_protein|floatformat:0 }}g · C {{ m.total_carbs|floatformat:0 }}g · F {{ m.total_fat|floatformat:0 }}g
                         {% endif %}{% endfor %}
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);">No logs available yet. Keep tracking!</td></tr>
+                <tr><td colspan="8" class="mp-matrix-empty">No logs yet. Keep tracking in Daily Checklist and log your weight to see this table fill in.</td></tr>
                 {% endfor %}
             </tbody>
           </table>
@@ -766,7 +760,7 @@
       <div style="font-weight:700;margin-bottom:16px;">Renew / Upgrade Membership</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
         {% for plan in plans %}
-        <a href="/payments/pay/{{ plan.id }}/" class="btn btn-gold btn-sm">⚡ {{ plan.name }} — NPR {{ plan.price }}</a>
+        <a href="/payments/pay/{{ plan.id }}/" class="btn btn-gold btn-sm">{{ plan.name }} — NPR {{ plan.price }}</a>
         {% endfor %}
       </div>
     </div>
@@ -1310,12 +1304,25 @@ function calculateNutrients() {
             datasets: [{
                 label: 'Weight (kg)',
                 data: rawProgress.map(p => p.weight_kg).reverse(),
-                borderColor: '#0d9488',
-                backgroundColor: 'rgba(13, 148, 136, 0.1)',
-                tension: 0.3, fill: true
+                borderColor: '#818cf8',
+                backgroundColor: 'rgba(129, 140, 248, 0.14)',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#a5b4fc',
+                tension: 0.35,
+                fill: true
             }]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { color: '#64748b', maxRotation: 45 } },
+                y: { grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { color: '#64748b' } }
+            }
+        }
     });
 
     // 3. Macro Chart
@@ -1326,20 +1333,30 @@ function calculateNutrients() {
         data: {
             labels: rawMacros.map(m => m.date),
             datasets: [
-                { label: 'Protein (g)', data: rawMacros.map(m => m.protein), backgroundColor: '#10b981' },
-                { label: 'Carbs (g)', data: rawMacros.map(m => m.carbs), backgroundColor: '#f59e0b' },
-                { label: 'Fat (g)', data: rawMacros.map(m => m.fat), backgroundColor: '#ef4444' }
+                { label: 'Protein (g)', data: rawMacros.map(m => m.protein), backgroundColor: 'rgba(129, 140, 248, 0.85)', borderRadius: 4 },
+                { label: 'Carbs (g)', data: rawMacros.map(m => m.carbs), backgroundColor: 'rgba(251, 191, 36, 0.88)', borderRadius: 4 },
+                { label: 'Fat (g)', data: rawMacros.map(m => m.fat), backgroundColor: 'rgba(244, 114, 182, 0.85)', borderRadius: 4 }
             ]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: { x: { stacked: true }, y: { stacked: true } }
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 10, padding: 16 } } },
+            scales: {
+                x: { stacked: true, grid: { display: false }, ticks: { color: '#64748b', maxRotation: 45 } },
+                y: { stacked: true, grid: { color: 'rgba(148, 163, 184, 0.08)' }, ticks: { color: '#64748b' } }
+            }
         }
     });
 
     // 4. Consistency Donuts
-    const donutOptions = { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } };
-    
+    const donutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '78%',
+        plugins: { legend: { display: false }, tooltip: { enabled: true } }
+    };
+
     const ctxWork = document.getElementById('memberWorkoutConsistencyChart').getContext('2d');
     if (memberWorkoutPie) memberWorkoutPie.destroy();
     memberWorkoutPie = new Chart(ctxWork, {
@@ -1348,8 +1365,9 @@ function calculateNutrients() {
             labels: ['Completed', 'Missed'],
             datasets: [{
                 data: [consistency.workout, 100 - consistency.workout],
-                backgroundColor: ['#0d9488', 'rgba(255,255,255,0.05)'],
-                borderWidth:0
+                backgroundColor: ['#818cf8', 'rgba(99, 102, 241, 0.1)'],
+                borderWidth: 0,
+                hoverOffset: 4
             }]
         },
         options: donutOptions
@@ -1363,8 +1381,9 @@ function calculateNutrients() {
             labels: ['Followed', 'Missed'],
             datasets: [{
                 data: [consistency.diet, 100 - consistency.diet],
-                backgroundColor: ['#10b981', 'rgba(255,255,255,0.05)'],
-                borderWidth:0
+                backgroundColor: ['#34d399', 'rgba(16, 185, 129, 0.12)'],
+                borderWidth: 0,
+                hoverOffset: 4
             }]
         },
         options: donutOptions
@@ -1394,7 +1413,8 @@ function calculateNutrients() {
     const pDate = document.getElementById('p-date');
     if (pDate) pDate.value = new Date().toISOString().split('T')[0];
 
-    if (document.getElementById('sec-progress').classList.contains('active')) {
+    const secProgress = document.getElementById('sec-progress');
+    if (secProgress && secProgress.classList.contains('active')) {
         initMemberProgressDashboard();
     }
   });

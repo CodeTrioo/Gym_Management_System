@@ -4,9 +4,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}GymPro Portal{% endblock %}</title>
+<title>{% block title %}Almost Fit Portal{% endblock %}</title>
+{% comment %} Updated favicon and manifest tags {% endcomment %}
+<link rel="icon" type="image/png" sizes="96x96" href="{% static 'img/favicon-96x96.png' %}">
+<link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+<link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+<link rel="manifest" href="{% static 'img/site.webmanifest' %}">
 <link rel="stylesheet" href="{% static 'Css/main.css' %}">
+<link rel="stylesheet" href="{% static 'Css/theme-indigo-violet.css' %}">
 <link rel="stylesheet" href="{% static 'Css/portal.css' %}">
+<link rel="stylesheet" href="{% static 'Css/portal-ui.css' %}">
 {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -17,9 +24,9 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="/" class="sidebar-logo">
-        <div class="logo-icon">💪</div>
+        <img src="{% static 'img/logo.png' %}" alt="Almost Fit logo" class="logo-image">
         <div>
-          <div class="logo-text">GymPro</div>
+          <div class="logo-text">Almost Fit</div>
           <div class="logo-sub">{% block portal_name %}Portal{% endblock %}</div>
         </div>
       </a>
@@ -27,7 +34,7 @@
 
     <div class="sidebar-user">
       <img src="{{ profile.get_profile_image }}" class="user-avatar" alt="avatar"
-           onerror="this.src='https://ui-avatars.com/api/?name={{ user.email }}&background=0d9488&color=fff'">
+           onerror="this.src='https://ui-avatars.com/api/?name={{ user.email }}&background=6366f1&color=fff'">
       <div>
         <div class="user-name">{{ user.get_full_name|default:user.email|truncatechars:22 }}</div>
         <div class="user-role">{{ profile.role }}</div>
@@ -39,9 +46,9 @@
     </nav>
 
     <div class="sidebar-footer">
-      <button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">🌙 Dark Mode</button>
+      <button type="button" class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()">Light appearance</button>
       <a href="/logout/" class="nav-item" style="color:var(--red);">
-        <span class="nav-icon">🚪</span> Logout
+        <span class="nav-icon" aria-hidden="true"></span> Sign out
       </a>
     </div>
   </aside>
@@ -52,12 +59,14 @@
   <main class="portal-main">
     <div class="portal-topbar">
       <div>
-        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <button type="button" class="hamburger" onclick="toggleSidebar()" aria-label="Open menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
         <h1 class="page-title" id="page-title">{% block default_title %}Dashboard{% endblock %}</h1>
         <p class="page-subtitle" id="page-subtitle"></p>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <a href="/" class="btn btn-outline btn-sm">🏠 Home</a>
+        <a href="/" class="btn btn-outline btn-sm">Home</a>
         {% block topbar_extra %}{% endblock %}
       </div>
     </div>

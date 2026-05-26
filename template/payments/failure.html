@@ -1,28 +1,45 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-<head><meta charset="UTF-8"><title>Payment Failed — GymPro</title>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment not completed — Almost Fit</title>
 <link rel="stylesheet" href="{% static 'Css/main.css' %}">
-<style>
-body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);padding:20px;}
-.fail-card{max-width:480px;width:100%;text-align:center;}
-.fail-icon{font-size:4rem;margin-bottom:16px;}
-</style>
+<link rel="stylesheet" href="{% static 'Css/theme-indigo-violet.css' %}">
+<link rel="stylesheet" href="{% static 'Css/payments-esewa.css' %}">
 </head>
 <body>
-<div class="fail-card card">
-  <div class="fail-icon">❌</div>
-  <h2 style="margin-bottom:8px;color:var(--red);">Payment Failed</h2>
-  <p style="color:var(--text-secondary);margin-bottom:24px;">
-    {% if error %}{{ error }}{% else %}Your payment could not be completed. No amount has been deducted. Please try again.{% endif %}
-  </p>
-  {% if transaction %}
-  <div style="background:var(--bg-dark);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;">
-    <div style="color:var(--text-muted);font-size:.85rem;">Transaction ID: <code>{{ transaction.transaction_uuid|truncatechars:24 }}</code></div>
+<div class="pay-flow">
+  <div class="pay-brand">
+    <a href="/" class="pay-back">← Home</a>
+    <a href="/" class="pay-brand-mark">Almost Fit<span>· Payment</span></a>
+    <span class="pay-brand-spacer" aria-hidden="true"></span>
   </div>
-  {% endif %}
-  <a href="/portal/member/" class="btn btn-primary w-full" style="justify-content:center;margin-bottom:12px;">Try Again →</a>
-  <a href="/" style="color:var(--text-muted);font-size:.85rem;">Back to Home</a>
+
+  <div class="pay-result pay-result--fail card">
+    <div class="pay-result-top"></div>
+    <div class="pay-result-icon">!</div>
+    <h2>Payment not completed</h2>
+    <p>
+      {% if error %}{{ error }}{% else %}No charge was made. You can try again from your portal or choose a different plan.{% endif %}
+    </p>
+
+    {% if transaction %}
+    <div class="pay-receipt" style="border-color: rgba(239, 68, 68, 0.25);">
+      <div class="pay-receipt-row"><span>Reference</span><code>{{ transaction.transaction_uuid|truncatechars:28 }}</code></div>
+    </div>
+    {% endif %}
+
+    <div class="pay-result-actions">
+      <a href="/portal/member/" class="btn btn-primary w-full" style="justify-content:center;">Return to portal</a>
+      <a href="/#plans" class="btn btn-outline w-full" style="justify-content:center;">View plans</a>
+    </div>
+  </div>
 </div>
-<script>const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);</script>
-</body></html>
+<script>
+const t = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', t);
+</script>
+</body>
+</html>

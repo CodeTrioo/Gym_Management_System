@@ -42,12 +42,12 @@ function initMediaInput({ containerId, urlFieldId, cloudName, uploadPreset, type
 
   container.innerHTML = `
     <div class="media-tabs">
-      <button type="button" class="media-tab active" data-tab="upload">⬆ Upload</button>
-      <button type="button" class="media-tab" data-tab="url">🔗 Paste URL</button>
+      <button type="button" class="media-tab active" data-tab="upload">Upload</button>
+      <button type="button" class="media-tab" data-tab="url">Paste URL</button>
     </div>
     <div data-panel="upload">
       <div class="media-upload-area" id="${containerId}-drop">
-        <p>📁 Click or drag ${type === 'video' ? 'a video file / paste link' : 'an image'} here</p>
+        <p>Click or drag ${type === 'video' ? 'a video file' : 'an image'} here</p>
         <input type="file" id="${containerId}-file" accept="${type === 'video' ? 'video/*' : 'image/*'}" style="display:none">
       </div>
       <div class="upload-progress" id="${containerId}-progress">

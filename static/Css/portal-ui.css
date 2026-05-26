@@ -1,0 +1,221 @@
+/* Almost Fit — Portal UI polish (loads after portal.css; keeps theme tokens) */
+
+/* ── Content column & rhythm ── */
+.portal-main {
+  padding: 0 28px 40px;
+  max-width: min(1320px, 100vw - var(--sidebar-w));
+  background: radial-gradient(ellipse 85% 55% at 100% 0%, rgba(99, 102, 241, 0.06), transparent 52%);
+}
+html[data-theme="light"] .portal-main {
+  background: transparent;
+}
+
+.portal-topbar {
+  padding: 8px 0 20px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.portal-topbar > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.page-title {
+  font-size: clamp(1.35rem, 2.5vw, 1.65rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  max-width: 52ch;
+  line-height: 1.45;
+}
+
+/* ── Sidebar refinement ── */
+.sidebar-header {
+  padding: 22px 20px;
+}
+
+.logo-text {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.sidebar-user {
+  padding: 18px 20px;
+}
+
+.theme-toggle {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* ── Navigation focus ── */
+.nav-item:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.sidebar-footer .nav-item {
+  border-radius: var(--radius-sm);
+}
+
+/* ── Section headers (portal) ── */
+.portal-main .section-header {
+  margin-bottom: 16px;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.portal-main .section-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+/* ── Cards in portal ── */
+.portal-main .card + .card {
+  margin-top: 20px;
+}
+
+/* ── Data tables ── */
+.portal-main .table-wrapper,
+.portal-main table {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.portal-main table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.portal-main th {
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.portal-main td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.portal-main tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.portal-main tbody tr {
+  transition: background 0.15s ease;
+}
+
+.portal-main tbody tr:hover td {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+html[data-theme="light"] .portal-main tbody tr:hover td {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.portal-main code,
+.portal-main td code {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+}
+
+/* ── Empty & placeholder states ── */
+.portal-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.portal-empty strong {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+/* ── Expiry banners ── */
+.expiry-banner {
+  border-radius: var(--radius);
+  align-items: flex-start;
+}
+
+.expiry-banner strong {
+  font-weight: 600;
+}
+
+/* ── Mobile topbar ── */
+@media (max-width: 900px) {
+  .portal-main {
+    padding: 0 16px 32px;
+    max-width: 100%;
+  }
+
+  .hamburger {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .hamburger:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+  }
+}
+
+/* ── Modal in portal ── */
+.modal-overlay {
+  backdrop-filter: blur(8px);
+}
+
+.modal {
+  box-shadow: var(--shadow-lg, 0 24px 48px rgba(0, 0, 0, 0.35));
+}
+
+.modal-title {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.modal-close:focus-visible {
+  outline: 2px solid var(--teal);
+  border-radius: 4px;
+}

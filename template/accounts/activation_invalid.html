@@ -4,22 +4,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invalid Link — GymPro</title>
+<title>Invalid Link — Almost Fit</title>
 <link rel="stylesheet" href="{% static 'Css/main.css' %}">
-<style>
-  body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);}
-  .auth-card{width:100%;max-width:420px;text-align:center;padding:40px 28px;}
-  .icon-error{font-size:3rem;margin-bottom:16px;}
-  p{color:var(--text-secondary);line-height:1.6;}
-</style>
+<link rel="stylesheet" href="{% static 'Css/theme-indigo-violet.css' %}">
+<link rel="stylesheet" href="{% static 'Css/auth.css' %}">
 </head>
-<body>
-<div class="auth-card card">
-  <div class="icon-error">❌</div>
-  <h1 style="margin-bottom:16px;">Link Invalid</h1>
+<body class="auth-page">
+<div class="auth-card auth-card--status card">
+  <div class="auth-status-icon auth-status-icon--muted">!</div>
+  <h1>Link invalid</h1>
   <p>{{ message }}</p>
-  <div style="margin-top:24px;">
-    <a href="{% url 'register' %}" class="btn btn-outline">Back to Registration</a>
+  <div class="auth-actions">
+    <a href="{% url 'register' %}" class="btn btn-outline">Back to registration</a>
   </div>
 </div>
 </body>

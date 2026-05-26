@@ -4,43 +4,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login — GymPro</title>
+<title>Login — Almost Fit</title>
+{% comment %} Updated favicon and manifest tags {% endcomment %}
+<link rel="icon" type="image/png" sizes="96x96" href="{% static 'img/favicon-96x96.png' %}">
+<link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+<link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+<link rel="manifest" href="{% static 'img/site.webmanifest' %}">
 <link rel="stylesheet" href="{% static 'Css/main.css' %}">
-<style>
-  body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);}
-  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(13,148,136,.18),transparent);pointer-events:none;}
-  .auth-card{width:100%;max-width:420px;position:relative;z-index:1;}
-  .auth-logo{text-align:center;margin-bottom:32px;}
-  .auth-logo .logo-icon{width:60px;height:60px;background:linear-gradient(135deg,var(--teal),#0f766e);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:12px;}
-  .auth-logo h1{font-size:2rem;margin-bottom:4px;}
-  .auth-logo p{color:var(--text-muted);font-size:.9rem;}
-  .input-icon-wrap{position:relative;}
-  .input-icon-wrap .form-control{padding-left:44px;}
-  .input-icon-wrap .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:1.1rem;}
-  .toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;}
-  .divider{text-align:center;color:var(--text-muted);font-size:.85rem;margin:20px 0;position:relative;}
-  .divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border);}
-  .divider::before{left:0;} .divider::after{right:0;}
-  .auth-footer{text-align:center;margin-top:24px;color:var(--text-muted);font-size:.9rem;}
-  .auth-footer a{color:var(--teal-light);text-decoration:none;font-weight:600;}
-  .error-msg{color:var(--red);font-size:.85rem;margin-top:8px;display:none;}
-  .btn-loader{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-</style>
+<link rel="stylesheet" href="{% static 'Css/theme-indigo-violet.css' %}">
+<link rel="stylesheet" href="{% static 'Css/auth.css' %}">
 </head>
-<body>
+<body class="auth-page">
 {% csrf_token %}
 <div class="auth-card card">
   <div class="auth-logo">
-    <div class="logo-icon">💪</div>
+    <img src="{% static 'img/logo.png' %}" alt="Almost Fit logo" class="logo-image">
     <h1>Welcome Back</h1>
-    <p>Sign in to your GymPro account</p>
+    <p>Sign in to your Almost Fit account</p>
   </div>
 
   <div class="form-group">
     <label class="form-label">Email Address</label>
     <div class="input-icon-wrap">
-      <span class="icon">📧</span>
       <input type="email" id="email" class="form-control" placeholder="you@example.com" autocomplete="email">
     </div>
   </div>
@@ -51,9 +36,8 @@
       <a href="{% url 'password_reset' %}" style="font-size:.85rem; color:var(--teal-light); text-decoration:none;">Forgot Password?</a>
     </div>
     <div class="input-icon-wrap">
-      <span class="icon">🔒</span>
-      <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="current-password">
-      <button class="toggle-pass" type="button" onclick="togglePwd('password',this)">👁</button>
+      <input type="password" id="password" class="form-control" placeholder="Password" autocomplete="current-password" style="padding-right:4.5rem;">
+      <button class="toggle-pass" type="button" onclick="togglePwd('password',this)">Show</button>
     </div>
   </div>
 
@@ -75,7 +59,7 @@
 function togglePwd(id, btn) {
   const inp = document.getElementById(id);
   inp.type = inp.type === 'password' ? 'text' : 'password';
-  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+  btn.textContent = inp.type === 'password' ? 'Show' : 'Hide';
 }
 
 async function doLogin() {

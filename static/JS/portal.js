@@ -33,8 +33,7 @@ function showToast(message, type = 'info', duration = 4000) {
   }
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-  toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${message}`;
+  toast.innerHTML = `<span class="toast-msg">${message}</span>`;
   container.appendChild(toast);
   setTimeout(() => {
     toast.style.animation = 'fadeOut 0.3s ease forwards';
@@ -112,7 +111,7 @@ function toggleTheme() {
 }
 function updateThemeBtn(theme) {
   const btn = document.getElementById('theme-toggle-btn');
-  if (btn) btn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+  if (btn) btn.textContent = theme === 'dark' ? 'Light appearance' : 'Dark appearance';
 }
 
 // ── BMI Calculator ──

@@ -1,7 +1,7 @@
 {% extends 'portals/base_portal.html' %}
 {% load static %}
 
-{% block title %}Staff Portal — GymPro{% endblock %}
+{% block title %}Staff Portal — Almost Fit{% endblock %}
 {% block portal_name %}Instructor Portal{% endblock %}
 {% block default_title %}Staff Dashboard{% endblock %}
 
@@ -55,48 +55,48 @@
 <div class="nav-section-label">Main</div>
 <div class="nav-item active" data-section="sec-dashboard" data-title="Instructor Dashboard"
   data-subtitle="Welcome back!">
-  <span class="nav-icon">🏠</span> Dashboard
+  <span class="nav-icon" aria-hidden="true"></span> Dashboard
 </div>
 {% if 'my_schedule' in allowed_nav %}
 <div class="nav-item" data-section="sec-schedule" data-title="My Schedule" data-subtitle="Manage your available slots">
-  <span class="nav-icon">📅</span> My Schedule
+  <span class="nav-icon" aria-hidden="true"></span> My Schedule
 </div>
 {% endif %}
 {% if 'my_members' in allowed_nav %}
 <div class="nav-item {% if 'my_schedule' not in allowed_nav %}active{% endif %}" data-section="sec-members"
   data-title="My Members" data-subtitle="Assigned trainees">
-  <span class="nav-icon">👥</span> My Members
+  <span class="nav-icon" aria-hidden="true"></span> My Members
 </div>
 {% endif %}
 {% if 'diet_plans' in allowed_nav %}
 <div class="nav-item" data-section="sec-diet" data-title="Diet Plans" data-subtitle="Manage member nutrition">
-  <span class="nav-icon">🥗</span> Diet Plans
+  <span class="nav-icon" aria-hidden="true"></span> Diet Plans
 </div>
 {% endif %}
 {% if 'workout_plans' in allowed_nav %}
 <div class="nav-item" data-section="sec-workout" data-title="Workout Plans" data-subtitle="Training programs">
-  <span class="nav-icon">💪</span> Workout Plans
+  <span class="nav-icon" aria-hidden="true"></span> Workout Plans
 </div>
 {% endif %}
 {% if 'global_workout' in allowed_nav %}
 <div class="nav-item" data-section="sec-global-workout" data-title="Global Workouts"
   data-subtitle="Generic class library">
-  <span class="nav-icon">🌍</span> Library
+  <span class="nav-icon" aria-hidden="true"></span> Library
 </div>
 {% endif %}
 
 {% if 'progress' in allowed_nav %}
 <div class="nav-item" data-section="sec-progress" data-title="Member Progress" data-subtitle="Track transformations">
-  <span class="nav-icon">📈</span> Progress
+  <span class="nav-icon" aria-hidden="true"></span> Progress
 </div>
 {% endif %}
 <div class="nav-item" data-section="sec-member-detail" data-title="Member Detail" data-subtitle="Full client profile"
   style="display:none;" id="nav-member-detail">
-  <span class="nav-icon">👤</span> Client
+  <span class="nav-icon" aria-hidden="true"></span> Client
 </div>
 <div class="nav-section-label">Account</div>
 <div class="nav-item" data-section="sec-profile" data-title="My Profile" data-subtitle="Manage your settings">
-  <span class="nav-icon">👤</span> My Profile
+  <span class="nav-icon" aria-hidden="true"></span> My Profile
 </div>
 {% endblock %}
 

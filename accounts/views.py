@@ -126,11 +126,19 @@ def login_user(request):
 
         email = data.get("email", "").strip().lower()
         password = data.get("password", "")
+        # Resolve the actual username for authentication – allows login with email even if username differs
+        from django.contrib.auth import get_user_model
+        UserModel = get_user_model()
+        try:
+            user_obj = UserModel.objects.get(email=email)
+            auth_username = user_obj.username
+        except UserModel.DoesNotExist:
+            auth_username = email
 
         if not email or not password:
             return JsonResponse({"message": "Email and password are required"}, status=400)
 
-        user = authenticate(request, username=email, password=password)
+        user = authenticate(request, username=auth_username, password=password)
         if user is not None:
             login(request, user)
             redirect_url = _get_portal_url(user)

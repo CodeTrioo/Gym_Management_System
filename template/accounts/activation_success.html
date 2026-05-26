@@ -4,22 +4,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Account Verified — GymPro</title>
+<title>Account Verified — Almost Fit</title>
 <link rel="stylesheet" href="{% static 'Css/main.css' %}">
-<style>
-  body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);}
-  .auth-card{width:100%;max-width:420px;text-align:center;padding:40px 28px;}
-  .icon-check{font-size:3rem;margin-bottom:16px;}
-  p{color:var(--text-secondary);line-height:1.6;}
-</style>
+<link rel="stylesheet" href="{% static 'Css/theme-indigo-violet.css' %}">
+<link rel="stylesheet" href="{% static 'Css/auth.css' %}">
 </head>
-<body>
-<div class="auth-card card">
-  <div class="icon-check">✅</div>
-  <h1 style="margin-bottom:16px;">Verified successfully!</h1>
-  <p>Your GymPro account has been successfully created and verified.</p>
-  <div style="margin-top:24px;">
-    <a href="{% url 'login' %}" class="btn btn-primary">Log in to your account</a>
+<body class="auth-page">
+<div class="auth-card auth-card--status card">
+  <div class="auth-status-icon">✓</div>
+  <h1>You're verified</h1>
+  <p>Your Almost Fit account is active. Sign in to open your member portal.</p>
+  <div class="auth-actions">
+    <a href="{% url 'login' %}" class="btn btn-primary">Log in</a>
   </div>
 </div>
 </body>

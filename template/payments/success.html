@@ -1,32 +1,55 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-<head><meta charset="UTF-8"><title>Payment Successful — GymPro</title>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment complete — Almost Fit</title>
 <link rel="stylesheet" href="{% static 'Css/main.css' %}">
-<style>
-body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark);padding:20px;}
-.success-card{max-width:480px;width:100%;text-align:center;}
-.success-icon{font-size:5rem;margin-bottom:20px;animation:pop .4s cubic-bezier(.36,.07,.19,.97) both;}
-@keyframes pop{0%{transform:scale(0);}80%{transform:scale(1.15);}100%{transform:scale(1);}}
-.confetti-line{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--gold),var(--green));margin-bottom:24px;}
-</style>
+<link rel="stylesheet" href="{% static 'Css/theme-indigo-violet.css' %}">
+<link rel="stylesheet" href="{% static 'Css/payments-esewa.css' %}">
 </head>
 <body>
-<div class="success-card card">
-  <div class="confetti-line"></div>
-  <div class="success-icon">🎉</div>
-  <h2 style="margin-bottom:8px;">Payment Successful!</h2>
-  <p style="color:var(--text-secondary);margin-bottom:24px;">Your membership is now active. Welcome to GymPro — let's transform your life!</p>
-  {% if enrollment %}
-  <div style="background:var(--bg-dark);border:1px solid var(--border-teal);border-radius:var(--radius-sm);padding:20px;margin-bottom:24px;text-align:left;">
-    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:var(--text-muted);">Plan</span><strong>{{ enrollment.plan.name }}</strong></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:var(--text-muted);">Starts</span><strong>{{ enrollment.start_date|date:"M d, Y" }}</strong></div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span style="color:var(--text-muted);">Expires</span><strong>{{ enrollment.end_date|date:"M d, Y" }}</strong></div>
-    {% if transaction.esewa_ref_id %}<div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">eSewa Ref</span><code style="font-size:.8rem;">{{ transaction.esewa_ref_id }}</code></div>{% endif %}
+<div class="pay-flow">
+  <div class="pay-brand">
+    <a href="/" class="pay-back">← Home</a>
+    <a href="/" class="pay-brand-mark">Almost Fit<span>· Payment</span></a>
+    <span class="pay-brand-spacer" aria-hidden="true"></span>
   </div>
-  {% endif %}
-  <a href="/portal/member/" class="btn btn-primary w-full" style="justify-content:center;margin-bottom:12px;">Go to My Portal →</a>
-  <a href="/" style="color:var(--text-muted);font-size:.85rem;">Back to Home</a>
+
+  <div class="pay-steps" aria-label="Progress">
+    <div class="pay-step-line" aria-hidden="true"></div>
+    <div class="pay-step pay-step--done"><span class="num">✓</span> Review</div>
+    <div class="pay-step pay-step--done"><span class="num">✓</span> eSewa</div>
+    <div class="pay-step pay-step--active"><span class="num">3</span> Done</div>
+  </div>
+
+  <div class="pay-result card">
+    <div class="pay-result-top"></div>
+    <div class="pay-result-icon">✓</div>
+    <h2>Payment received</h2>
+    <p>Your membership is now active. You can manage bookings and plans from your member portal.</p>
+
+    {% if enrollment %}
+    <div class="pay-receipt">
+      <div class="pay-receipt-row"><span>Plan</span><strong>{{ enrollment.plan.name }}</strong></div>
+      <div class="pay-receipt-row"><span>Starts</span><strong>{{ enrollment.start_date|date:"M d, Y" }}</strong></div>
+      <div class="pay-receipt-row"><span>Expires</span><strong>{{ enrollment.end_date|date:"M d, Y" }}</strong></div>
+      {% if transaction.esewa_ref_id %}
+      <div class="pay-receipt-row"><span>eSewa reference</span><code>{{ transaction.esewa_ref_id }}</code></div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="pay-result-actions">
+      <a href="/portal/member/" class="btn btn-primary w-full" style="justify-content:center;">Open member portal</a>
+      <a href="/" class="btn btn-outline w-full" style="justify-content:center;">Back to website</a>
+    </div>
+  </div>
 </div>
-<script>const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);</script>
-</body></html>
+<script>
+const t = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', t);
+</script>
+</body>
+</html>

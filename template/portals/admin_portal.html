@@ -1,7 +1,7 @@
 {% extends 'portals/base_portal.html' %}
 {% load static %}
 
-{% block title %}Admin Portal — GymPro{% endblock %}
+{% block title %}Admin Portal — Almost Fit{% endblock %}
 {% block portal_name %}Admin Control{% endblock %}
 {% block default_title %}Admin Dashboard{% endblock %}
 
@@ -59,31 +59,31 @@
 {% block sidebar_nav %}
 <div class="nav-section-label">Overview</div>
 <div class="nav-item active" data-section="sec-dashboard" data-title="Admin Dashboard" data-subtitle="System overview">
-  <span class="nav-icon">📊</span> Dashboard
+  <span class="nav-icon" aria-hidden="true"></span> Dashboard
 </div>
 <div class="nav-section-label">Management</div>
 <div class="nav-item" data-section="sec-members" data-title="Member Management" data-subtitle="All gym members">
-  <span class="nav-icon">👥</span> Members
+  <span class="nav-icon" aria-hidden="true"></span> Members
 </div>
 <div class="nav-item" data-section="sec-staff" data-title="Staff Management" data-subtitle="Trainers & staff">
-  <span class="nav-icon">🧑‍🏫</span> Staff
+  <span class="nav-icon" aria-hidden="true"></span> Staff
 </div>
 <div class="nav-item" data-section="sec-access" data-title="Access Control" data-subtitle="Staff permissions">
-  <span class="nav-icon">🔐</span> Access Control
+  <span class="nav-icon" aria-hidden="true"></span> Access Control
 </div>
 <div class="nav-section-label">Content</div>
 <div class="nav-item" data-section="sec-plans" data-title="Membership Plans" data-subtitle="Manage pricing">
-  <span class="nav-icon">💎</span> Plans
+  <span class="nav-icon" aria-hidden="true"></span> Plans
 </div>
 <div class="nav-item" data-section="sec-announcements" data-title="Announcements" data-subtitle="Post news & updates">
-  <span class="nav-icon">📣</span> Announcements
+  <span class="nav-icon" aria-hidden="true"></span> Announcements
 </div>
 <div class="nav-item" data-section="sec-gallery" data-title="Gallery" data-subtitle="Public Overview Images">
-  <span class="nav-icon">🖼️</span> Gallery
+  <span class="nav-icon" aria-hidden="true"></span> Gallery
 </div>
 <div class="nav-section-label">Finance</div>
 <div class="nav-item" data-section="sec-payments" data-title="Payments" data-subtitle="Transaction history">
-  <span class="nav-icon">💳</span> Payments
+  <span class="nav-icon" aria-hidden="true"></span> Payments
 </div>
 
 {% endblock %}
@@ -265,7 +265,6 @@
         <input type="checkbox" class="access-toggle" data-key="{{ key }}" onchange="savePermissions()">
       </div>
       {% endfor %}
-      <button class="btn btn-primary" style="margin-top:16px;" onclick="savePermissions()">Save Permissions</button>
     </div>
     <div id="access-empty" style="text-align:center;padding:40px;color:var(--text-muted);">Select a staff member above
       to manage their access.</div>

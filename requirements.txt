@@ -5,6 +5,7 @@ sqlparse==0.5.4
 
 # Database
 psycopg[binary]
+PyMySQL>=1.1.0
 
 # Configuration / Environment
 python-decouple==3.8
@@ -24,7 +25,6 @@ oauthlib==3.3.1
 requests-oauthlib==2.0.0
 
 # QR Code Generation
-qrcode==7.4.2
 pillow==10.4.0
 
 # REST API (optional DRF views are used)
